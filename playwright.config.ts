@@ -38,7 +38,11 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-/*
+/* {
+      name: 'smoke',
+      use: {...devices['Desktop Chrome']},
+      testMatch: /loginPage.spec.ts/,
+      testIgnore: /example.spec.ts/},
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
