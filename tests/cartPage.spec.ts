@@ -54,5 +54,4 @@ test.describe('Cart Page Tests', () => {
         await expect(subTotalRow).toContainText('$59.00');
     });
 
-
 });
