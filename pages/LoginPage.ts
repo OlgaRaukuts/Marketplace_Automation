@@ -66,5 +66,6 @@ export class LoginPage {
         await expect(this.errorAlert).toBeVisible();
         await expect(this.errorAlert).toHaveText(/Incorrect login or password provided/);
     }
+    
 
 }

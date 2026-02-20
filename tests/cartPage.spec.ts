@@ -1,57 +1,55 @@
 import {test, expect} from '@playwright/test';
+import {CartPage} from '../pages/CartPage';
 
 test.describe('Cart Page Tests', () => {
-    test.beforeEach(async ({ page }) => {
-        await page.goto('https://automationteststore.com',{waitUntil: 'domcontentloaded',});
-    });
+   let cartPage: CartPage;
+
+    test.beforeEach(async ({page}) => {
+        cartPage = new CartPage(page);
+        await cartPage.goto();
+    })
+
 
     test('should load products page', async ({ page }) => {
         await expect(page).toHaveURL(/automationteststore\.com/);
     });
 
     test('should add a product to the cart -> open cart and verify product exists', async ({ page }) => {
-        await page.locator('#featured').locator('a.productcart[data-id="50"]').click();
-        await page.locator('li[data-id="menu_cart"] > a:visible').click();
+        await cartPage.addProductById('50');
         await expect(page.locator('input[name="quantity[50]"]')).toBeVisible();
     });
 
-    test('should add a product to the cart -> quick basket exists', async ({ page }) => {
-        await page.locator('#featured a.productcart[data-id="50"]').click();
-        const productCard = page.locator('#featured div.pricetag.jumbotron', {
-      has: page.locator('a.productcart[data-id="50"]'), });
-        await expect(productCard).toBeVisible();
-        await expect(productCard).toHaveClass(/added_to_cart/);
-        const quickBasket = productCard.locator('.quick_basket');
-        await expect(quickBasket).toBeVisible();
-        await expect(quickBasket.locator('a[title="Added to cart"]')).toBeVisible();
+    test('should add a product to the cart -> quick basket exists', async () => {
+        await cartPage.addProductById('50');
+        await cartPage.expectQuickBasketEffect('50');
     });
 
-        test('should add multiple products to the cart -> open cart and verify product exists', async ({ page }) => {
-        await page.locator('#featured').locator('a.productcart[data-id="50"]').click();
-        await page.locator('#featured').locator('a.productcart[data-id="51"]').click();
-        await page.locator('li[data-id="menu_cart"] > a:visible').click();
-        await expect(page.locator('input[name="quantity[50]"]')).toBeVisible();
-        await expect(page.locator('input[name="quantity[51]"]')).toBeVisible();
+        test('should add multiple products to the cart -> open cart and verify product exists', async () => {
+        const products = ['50', '51'];
+        // Add each product to the cart
+        for (const id of products) {
+            await cartPage.addProductById(id);
+        }
+        await cartPage.navigateToCart();
+        // Verify both exist in the cart page
+        await cartPage.expectProductsInCart(products);
     });
 
-        test('should remove a product from the cart -> open cart and verify product exists', async ({ page }) => {
-        await page.locator('#featured').locator('a.productcart[data-id="50"]').click();
-        await page.locator('li[data-id="menu_cart"] > a:visible').click();
-        await expect(page.locator('input[name="quantity[50]"]')).toBeVisible();
-        await page.locator('a[href*="remove=50"]').click();
-        await expect(page.locator('.container-fluid.cart-info.product-list')).toHaveCount(0);
+        test('should remove a product from the cart -> open cart and verify product exists', async () => {
+        await cartPage.addProductById('50');
+        await cartPage.navigateToCart();
+        await cartPage.expectProductsInCart(['50']);
+        await cartPage.removeProductById('50');
+        await cartPage.expectCartToBeEmpty();
     });
-        test('verify cart total', async ({ page }) => {
-        await page.locator('#featured').locator('a.productcart[data-id="50"]').click();
-        await page.locator('li[data-id="menu_cart"] > a:visible').click();
-         const quantityInput = page.locator('input[name="quantity[50]"]');
-        await expect(quantityInput).toBeVisible();  
-        await expect(quantityInput).toHaveValue('1');
-        await quantityInput.fill('2');
-        await page.getByRole('button',{name: 'Update'}).click();
-        await expect(quantityInput).toHaveValue('2');
-        const subTotalRow = page.locator('#totals_table tr', {hasText: 'Sub-Total:'});
-        await expect(subTotalRow).toContainText('$59.00');
+        test('verify cart total', async () => {
+        await cartPage.addProductById('50');
+        await cartPage.navigateToCart();
+        await cartPage.expectProductsInCart(['50']);
+        await cartPage.expectProductQuantity('50', '1');
+        await cartPage.updateProductQuantity('50', '2');
+        await cartPage.expectProductQuantity('50', '2');
+        await cartPage.expectSubTotal('$59.00');
     });
 
 });
