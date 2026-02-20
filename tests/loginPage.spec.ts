@@ -1,9 +1,13 @@
 import {test, expect} from '@playwright/test';
+import { LoginPage } from '../pages/LoginPage';
 
 test.describe('Login Page Tests', () => {
+    
     test.beforeEach(async ({page}) => {
-        await page.goto('https://automationteststore.com/index.php?rt=account/login');
+        const loginPage = new LoginPage(page);
+        await loginPage.goto();
     })
+    
     test('should load login page', async ({ page }) => {
         await expect(page).toHaveTitle(/Account Login/);
     });
