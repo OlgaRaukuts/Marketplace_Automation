@@ -16,7 +16,8 @@ test.describe('Cart Page Tests', () => {
 
     test('should add a product to the cart -> open cart and verify product exists', async ({ page }) => {
         await cartPage.addProductById('50');
-        await expect(page.locator('input[name="quantity[50]"]')).toBeVisible();
+        await cartPage.navigateToCart();
+        await cartPage.expectProductsInCart(['50']);
     });
 
     test('should add a product to the cart -> quick basket exists', async () => {
