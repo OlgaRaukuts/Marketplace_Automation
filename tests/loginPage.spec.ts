@@ -12,37 +12,37 @@ test.describe('Login Page Tests', () => {
     })
 
     test('should load login page', async ({ page }) => {
-        await expect(page).toHaveTitle(/Account Login/);
+        await expect(page).toHaveTitle(/OrangeHRM/);
     });
 
     test('Login with valid credentials', async ({page}) => {
-        await loginPage.login('OlyaTest', 'Test123$');
+        await loginPage.login('Admin', 'admin123');
         await loginPage.expectedLoginSuccess();
     });
 
       test('Login with invalid username', async () => {
-        await loginPage.login('OlyaTesty', 'Test123$');
+        await loginPage.login('Adminy', 'admin123');
         await loginPage.expectLoginError();
         });
 
      test('Login with invalid password', async () => {
-        await loginPage.login('OlyaTest', 'Test1233$');
+        await loginPage.login('Admin', 'admin1234');
         await loginPage.expectLoginError();
         });
 
      test('Login with blank fields', async () => {
-        await loginPage.login(' ', ' ');
-        await loginPage.expectLoginError();
+        await loginPage.login('', '');
+        await loginPage.expectRequiredMessage();
         });
 
      test('Password should be masked', async () => {
           await expect(loginPage.passwordInput).toHaveAttribute('type', 'password');
-          await loginPage.passwordInput.fill('Test123$$');
-          await expect(loginPage.passwordInput).toHaveValue('Test123$$');
+          await loginPage.passwordInput.fill('admin123');
+          await expect(loginPage.passwordInput).toHaveValue('admin123');
         });
 
      test('Logout', async () => {
-        await loginPage.login('OlyaTest', 'Test123$');
+        await loginPage.login('Admin', 'admin123');
         await loginPage.expectedLoginSuccess();
         await loginPage.logout();
         await loginPage.expectLoggedOut();
