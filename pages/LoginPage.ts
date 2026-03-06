@@ -69,6 +69,7 @@ export class LoginPage {
 
     /** Verifies the user is successfully logged in and redirected to the Account page */
     async expectedLoginSuccess(): Promise<void>{
+        await expect(this.dashboard).toBeVisible({ timeout: 10000 });
         await expect(this.page).toHaveURL(/dashboard/);
         await expect(this.dashboard).toBeVisible();
     }
