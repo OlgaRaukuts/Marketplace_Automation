@@ -1,4 +1,5 @@
 import { Page, Locator,expect } from "@playwright/test";
+import { time } from "node:console";
 
 export class PIMPage{
 readonly page: Page;
@@ -93,6 +94,23 @@ async editEmployeeDetails(firstName: string, middleName: string, lastName: strin
         await expect(successToast).toBeHidden({ timeout: 15000 });
         await this.page.waitForLoadState('domcontentloaded');
     }
+/** Delete an employee */
+async deleteEmployee(firstName: string, lastName: string): Promise<void>{
+    const row = this.page.locator('.oxd-table-card').filter({hasText: firstName}).filter({hasText: lastName});
+    await row.locator('i.bi-trash').click();
+    const confirmButton = this.page.getByRole('button', { name: 'Yes, Delete' });
+    await confirmButton.waitFor({ state: 'visible' });
+    await confirmButton.click();
+}
+
+/** Verify that the employee is deleted */
+async isEmployeeDeleted(firstName: string, lastName: string): Promise<void>{
+    const row = this.page.locator('.oxd-table-card').filter({hasText: firstName}).filter({hasText: lastName});
+    await expect(row).toHaveCount(0, { timeout: 15000 }); 
+}
+
+
+
 
     /**Verify that the PIM page is displayed */
     async isPIMPageDisplayed(): Promise<void>{

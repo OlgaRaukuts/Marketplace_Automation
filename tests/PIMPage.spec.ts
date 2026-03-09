@@ -57,5 +57,10 @@ test('should navigate to employee profile page when clicking on employee name', 
 });
 */
 
+test('should delete an employee', async () => {
+    await pimPage.searchEmployeeByName('Harry Potter');
+    await pimPage.deleteEmployee('Harry', 'Potter');
+    await pimPage.isEmployeeDeleted('Harry', 'Potter');
+});
 
 });
