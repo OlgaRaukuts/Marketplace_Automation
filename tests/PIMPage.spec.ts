@@ -63,4 +63,33 @@ test('should delete an employee', async () => {
     await pimPage.isEmployeeDeleted('Harry', 'Potter');
 });
 
+test('should add several new employees', async ({ page }) => {
+    
+    const employees = [
+        { firstName: 'James', lastName: 'Potter' },
+        { firstName: 'Lily', lastName: 'Potter' }, 
+    ];
+    for (const emp of employees) {
+        const fullName = `${emp.firstName} ${emp.lastName}`;
+        await pimPage.addEmployee(emp.firstName, emp.lastName);
+        await pimPage.verifyProfilePage(fullName);
+        await pimPage.navigateToPIM();
+        await pimPage.searchEmployeeByName(fullName);
+        await pimPage.verifyEmployeeInTable(emp.firstName, emp.lastName);
+        await page.getByRole('button', { name: 'Reset' }).click();
+    }
+});
+
+test('should delete employees one by one', async () => {
+    const employeesToDelete = [
+        { firstName: 'James', lastName: 'Potter' },
+        { firstName: 'Lily', lastName: 'Potter' }, // Changed name so it actually finds someone new
+    ];
+
+    for (const employee of employeesToDelete) {
+        await pimPage.searchEmployeeByName(employee.firstName); 
+        await pimPage.deleteFirstResult(); 
+        await pimPage.isEmployeeDeleted(employee.firstName, employee.lastName);
+    }
+});
 });

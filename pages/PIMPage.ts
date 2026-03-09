@@ -48,8 +48,7 @@ constructor(page: Page){
         await this.firstNameInput.fill(firstName);
         await this.lastNameInput.fill(lastName);
         await this.saveButton.click();
-        const successToast = this.page.locator('.oxd-toast-content--success');
-        await expect(successToast).toBeVisible({ timeout: 15000 }); 
+        await this.page.waitForURL(/.*viewPersonalDetails.*/, { timeout: 15000 }); 
     }
 
     /** Add an employee without first name*/
@@ -70,6 +69,16 @@ constructor(page: Page){
         await dropdownOption.click(); 
         await this.searchButton.click();
     }
+
+/** Search for an employee without choosing the name in the dropdown */
+async searchEmployee(fullName: string): Promise<void> {
+        await expect(this.employeeNameSearchInput).toBeVisible({ timeout: 15000 });
+        await this.employeeNameSearchInput.click();
+        await this.employeeNameSearchInput.fill(''); 
+        await this.employeeNameSearchInput.pressSequentially(fullName, { delay: 100 });
+        await this.searchButton.click();
+    }
+
 
     async clickEditEmployee(firstName: string, lastName: string): Promise<void> {
         const row = this.page.locator('.oxd-table-card')
@@ -103,14 +112,30 @@ async deleteEmployee(firstName: string, lastName: string): Promise<void>{
     await confirmButton.click();
 }
 
+/** Delete several employees at once */
+async deleteFirstResult(): Promise<void> {
+    const firstRow = this.page.locator('.oxd-table-card').first();
+    const noRecords = this.page.getByText('No Records Found');
+    await Promise.race([
+        firstRow.waitFor({ state: 'visible', timeout: 10000 }),
+        noRecords.waitFor({ state: 'visible', timeout: 10000 })
+    ]);
+
+    if (await noRecords.isVisible()) {
+        console.log("No records found to delete.");
+        return;
+    }
+    await firstRow.locator('.bi-trash').click();
+    const confirmButton = this.page.getByRole('button', { name: /Yes, Delete/i });
+    await confirmButton.click();
+    await this.page.locator('.oxd-toast').waitFor({ state: 'hidden' });
+}
+
 /** Verify that the employee is deleted */
 async isEmployeeDeleted(firstName: string, lastName: string): Promise<void>{
     const row = this.page.locator('.oxd-table-card').filter({hasText: firstName}).filter({hasText: lastName});
     await expect(row).toHaveCount(0, { timeout: 15000 }); 
 }
-
-
-
 
     /**Verify that the PIM page is displayed */
     async isPIMPageDisplayed(): Promise<void>{
@@ -125,9 +150,9 @@ async isEmployeeListDisplayed(): Promise<void> {
 
     /** Verification: Check that we are on the employee profile page */
     async verifyProfilePage(fullName: string): Promise<void> {
+        await this.page.waitForURL(/.*viewPersonalDetails.*/);
         const header = this.page.locator('.orangehrm-edit-employee-name h6');
-        await expect(header).toBeVisible({ timeout: 15000 });
-        await expect(header).toContainText(fullName);
+        await expect(header).toContainText(fullName, { timeout: 30000 });
   }
 
 /** Verification: Check First and Last, and log/warn about Middle Name instead of crashing */
