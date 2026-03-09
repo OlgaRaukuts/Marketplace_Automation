@@ -20,7 +20,7 @@ export class LoginPage {
         this.errorAlert = page.locator('p', { hasText: 'Invalid credentials' });
         this.requiredMessage = page.locator('text=Required');
         this.logoutLink = page.getByRole('menuitem', { name: 'Logout' });
-        this.dashboard = page.getByRole('heading',{level: 6, name: 'Dashboard'});
+        this.dashboard = page.getByRole('heading',{name: 'Dashboard'});
         this.loginHeading = page.getByRole('heading', { level: 5, name: 'Login' });
         this.userProfileDropdown = page.locator('.oxd-userdropdown-tab');
     }
@@ -68,11 +68,12 @@ export class LoginPage {
     }
 
     /** Verifies the user is successfully logged in and redirected to the Account page */
-    async expectedLoginSuccess(): Promise<void>{
-        await expect(this.dashboard).toBeVisible({ timeout: 10000 });
-        await expect(this.page).toHaveURL(/dashboard/);
-        await expect(this.dashboard).toBeVisible();
-    }
+// pages/LoginPage.ts
+    async expectedLoginSuccess(): Promise<void> {
+    await expect(this.page).toHaveURL(/.*dashboard.*/, { timeout: 10000 });
+    await this.page.waitForSelector('h6.oxd-topbar-header-breadcrumb-module', { state: 'visible' });
+    await expect(this.page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+}
 
     /** Verify that the login error message is displayed */
     async expectLoginError(): Promise<void> {
