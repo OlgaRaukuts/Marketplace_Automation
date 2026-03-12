@@ -13,7 +13,7 @@ setup('authenticate via API', async ({ request }) => {
     const tokenMatch = html.match(/name="_token" value="([^"]+)"/);
     const csrfToken = tokenMatch ? tokenMatch[1] : '';
     
-    expect(csrfToken).toBeTruthy(); // Проверяем, что токен найден
+    expect(csrfToken).toBeTruthy();
 
     // 3. Send POST-request for authentication
     const loginResponse = await request.post(`${baseUrl}/web/index.php/auth/validate`, {

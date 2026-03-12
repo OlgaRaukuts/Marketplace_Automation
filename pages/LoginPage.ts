@@ -17,7 +17,7 @@ export class LoginPage {
         this.usernameInput = page.locator('input[name="username"]');
         this.passwordInput = page.locator('input[name="password"]');
         this.loginButton = page.getByRole('button', { name: 'Login' });
-        this.errorAlert = page.locator('p', { hasText: 'Invalid credentials' });
+        this.errorAlert = page.getByRole('alert');
         this.requiredMessage = page.locator('text=Required');
         this.logoutLink = page.getByRole('menuitem', { name: 'Logout' });
         this.dashboard = page.getByRole('heading',{name: 'Dashboard'});
