@@ -38,6 +38,10 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'setup',
+      testMatch: /.*\.setup\.ts/,
+    },
 /* {
       name: 'smoke',
       use: {...devices['Desktop Chrome']},
