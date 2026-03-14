@@ -29,9 +29,16 @@ export default defineConfig({
     baseURL: 'https://opensource-demo.orangehrmlive.com',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    ignoreHTTPSErrors: true,
-    viewport: { width: 1280, height: 720 },
+// 1. Force the browser language to English
+    locale: 'en-US',
+    
+    // 2. Force a North American timezone
+    timezoneId: 'America/New_York',
+    
+    // 3. Force the network headers to request English content
+    extraHTTPHeaders: {
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
   },
 
   /* Configure projects for major browsers */
