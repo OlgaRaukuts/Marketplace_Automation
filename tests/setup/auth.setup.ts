@@ -6,15 +6,14 @@ setup('authenticate via UI', async ({ page }) => {
     // 1. Give the CI runner extra time (60 seconds) just for this setup phase
     setup.setTimeout(60000); 
 
-    const baseUrl = 'https://opensource-demo.orangehrmlive.com';
-
     // 2. Disguise the runner slightly and request English
     await page.setExtraHTTPHeaders({
         'Accept-Language': 'en-US,en;q=0.9',
     });
 
     // 3. Wait for the DOM to be ready
-    await page.goto(`${baseUrl}/web/index.php/auth/login`, { waitUntil: 'domcontentloaded' });
+    // Notice the relative path! Playwright automatically adds the baseURL from your config.
+    await page.goto('/web/index.php/auth/login', { waitUntil: 'domcontentloaded' });
 
     // 4. Language-Agnostic Locators: Use HTML 'name' attributes instead of visible text
     const usernameInput = page.locator('input[name="username"]');
