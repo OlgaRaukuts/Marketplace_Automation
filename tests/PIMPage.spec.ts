@@ -1,10 +1,19 @@
 import { test, expect } from "@playwright/test";
 import { PIMPage } from "../pages/PIMPage";
+import { LoginPage} from "../pages/LoginPage";
+
+test.use({ storageState: { cookies: [], origins: [] } });
 
 test.describe('PIM Page Tests', () => {
     let pimPage: PIMPage;
+    let loginPage: LoginPage;
 
     test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page);
+        await loginPage.goto();
+        await loginPage.login('Admin', 'admin123');
+        await loginPage.expectedLoginSuccess();
+
      pimPage = new PIMPage(page);
         await page.goto('/web/index.php/pim/viewEmployeeList');
     });
