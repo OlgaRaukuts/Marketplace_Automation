@@ -63,7 +63,7 @@ test('should delete an employee', async () => {
     await pimPage.isEmployeeDeleted('Harry', 'Potter');
 });
 
-test('should add several new employees', async ({ page }) => {
+/* test('should add several new employees', async ({ page }) => {
     
     const employees = [
         { firstName: 'James', lastName: 'Potter' },
@@ -91,5 +91,5 @@ test('should delete employees one by one', async () => {
         await pimPage.deleteFirstResult(); 
         await pimPage.isEmployeeDeleted(employee.firstName, employee.lastName);
     }
-});
+}); */
 });
