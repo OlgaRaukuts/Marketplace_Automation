@@ -12,8 +12,12 @@ setup('authenticate via API', async ({ request }) => {
     // OrangeHRM stores it in a hidden field: <input type="hidden" name="_token" value="...">
     const tokenMatch = html.match(/name="_token" value="([^"]+)"/);
     const csrfToken = tokenMatch ? tokenMatch[1] : '';
-    
-    expect(csrfToken).toBeTruthy();
+   // If that fails, let's log the HTML to see what's actually being returned
+if (!csrfToken) {
+    console.log("Could not find token. HTML snippet:", html.substring(0, 1000));
+}
+
+expect(csrfToken, 'CSRF token should be found in the login page').toBeTruthy();
 
     // 3. Send POST-request for authentication
     const loginResponse = await request.post(`${baseUrl}/web/index.php/auth/validate`, {
