@@ -115,19 +115,25 @@ async deleteEmployee(firstName: string, lastName: string): Promise<void>{
 async deleteFirstResult(): Promise<void> {
     const firstRow = this.page.locator('.oxd-table-card').first();
     const noRecords = this.page.getByText('No Records Found');
+
     await Promise.race([
-        firstRow.waitFor({ state: 'visible', timeout: 10000 }),
-        noRecords.waitFor({ state: 'visible', timeout: 10000 })
+        firstRow.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {}),
+        noRecords.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
     ]);
 
     if (await noRecords.isVisible()) {
         console.log("No records found to delete.");
         return;
     }
+
     await firstRow.locator('.bi-trash').click();
+
     const confirmButton = this.page.getByRole('button', { name: /Yes, Delete/i });
+    
+    await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
     await confirmButton.click();
-    await this.page.locator('.oxd-toast').waitFor({ state: 'hidden' });
+
+    await expect(this.page.locator('.oxd-toast')).toHaveCount(0, { timeout: 10000 });
 }
 
 /** Verify that the employee is deleted */

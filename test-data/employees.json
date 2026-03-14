@@ -1,0 +1,16 @@
+{
+  "newEmployee": {
+    "firstName": "Harry",
+    "lastName": "Potter",
+    "fullName": "Harry Potter"
+  },
+  "existingEmployee": {
+    "firstName": "Amelia",
+    "lastName": "Brown",
+    "fullName": "Amelia Brown"
+  },
+  "bulkEmployees": [
+    { "firstName": "James", "lastName": "Potter", "fullName": "James Potter" },
+    { "firstName": "Lily", "lastName": "Evans", "fullName": "Lily Evans" }
+  ]
+}
