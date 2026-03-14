@@ -1,19 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { LoginPage } from "../pages/LoginPage";
 import { PIMPage } from "../pages/PIMPage";
 
 test.describe('PIM Page Tests', () => {
-    let loginPage: LoginPage;
     let pimPage: PIMPage;
 
     test.beforeEach(async ({ page }) => {
-        loginPage = new LoginPage(page);
-        pimPage = new PIMPage(page);
-
-        await loginPage.goto();
-        await loginPage.login('Admin', 'admin123');
-        await loginPage.expectedLoginSuccess();
-        await pimPage.navigateToPIM();
+     pimPage = new PIMPage(page);
+        await page.goto('/web/index.php/pim/viewEmployeeList');
     });
 
     test('should display PIM page', async () => {
