@@ -90,4 +90,26 @@ test.describe('(Mocking Tests) - Employee List - Negative Scenarios', () => {
         const recordsFoundText = page.locator('.orangehrm-horizontal-padding', { hasText: 'Records Found' });
         await expect(recordsFoundText).toContainText('(2) Records Found');
     });
+
+    test('Should display "No Records Found" when employee list is empty', async ({ page }) => {
+        await page.goto('/web/index.php/dashboard/index');
+
+        // Mock API to return empty employee list
+        await page.route('**/api/v2/pim/employees**', async route => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    data: [], 
+                    meta: { total: 0 } 
+                })
+            });
+        });
+
+        await page.locator('a[href*="viewPimModule"]').click();
+
+        const noRecordsToast = page.locator('#oxd-toaster_1').getByText('No Records Found');
+        
+        await expect(noRecordsToast).toBeVisible();
+    });
 });
