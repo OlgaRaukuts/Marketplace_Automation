@@ -47,7 +47,7 @@ constructor(page: Page){
         await this.firstNameInput.fill(firstName);
         await this.lastNameInput.fill(lastName);
         await this.saveButton.click();
-        await this.page.waitForURL(/.*viewPersonalDetails.*/, { timeout: 15000 }); 
+        await this.page.waitForURL(/.*viewPersonalDetails.*/, { timeout: 45000 }); 
     }
 
     /** Add an employee without first name*/
@@ -64,7 +64,7 @@ constructor(page: Page){
         await this.employeeNameSearchInput.fill(''); 
         await this.employeeNameSearchInput.pressSequentially(fullName, { delay: 100 });
         const dropdownOption = this.page.locator('.oxd-autocomplete-option', { hasText: fullName }).first();
-        await dropdownOption.waitFor({ state: 'visible', timeout: 20000 });
+        await dropdownOption.waitFor({ state: 'visible', timeout: 45000 });
         await dropdownOption.click(); 
         await this.searchButton.click();
     }

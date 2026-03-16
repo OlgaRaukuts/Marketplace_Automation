@@ -1,6 +1,6 @@
 import { test } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
-import credentials from '../test-data/credentials.json';
+import credentials from '../tests/test-data/credentials.json';
 
 // This forces these tests to ignore the global storageState and start logged out
 test.use({ storageState: { cookies: [], origins: [] } });
