@@ -1,70 +1,58 @@
-import { test, expect } from "@playwright/test";
-import { PIMPage } from "../pages/PIMPage";
-import empData from '../tests/test-data/employees.json';
+import { test, expect } from '../tests/fixtures/ui-test.fixture';
+
 
 test.describe('PIM Page Tests', () => {
-    let pimPage: PIMPage;
 
-    test.beforeEach(async ({ page }) => {
-        pimPage = new PIMPage(page);
-        
-        await page.goto('/web/index.php/pim/viewEmployeeList');
-        
-        await page.waitForSelector('.oxd-table', { state: 'visible', timeout: 20000 });
-    });
-
-    test('should display PIM page', async () => {
+    test('should display PIM page', async ({ pimPage }) => {
         await pimPage.isPIMPageDisplayed();
     });
 
-    test('should display employee list', async () => {
+    test('should display employee list', async ({ pimPage }) => {
         await pimPage.isEmployeeListDisplayed();
-    })
-
-    test('should add a new employee', async () => {
-        const emp = empData.newEmployee;
-        await pimPage.addEmployee(emp.firstName, emp.lastName);
-        await pimPage.verifyProfilePage(emp.fullName);
-        await pimPage.navigateToPIM();
-        await pimPage.searchEmployeeByName(emp.fullName);
-        await pimPage.verifyEmployeeInTable(emp.firstName, emp.lastName);
     });
 
-    test('should display error when trying to add employee without first name', async () => {
+    test('should add a new employee', async ({ pimPage, newEmployeeData }) => {
+        await pimPage.addEmployee(newEmployeeData.firstName, newEmployeeData.lastName);
+        await pimPage.verifyProfilePage(newEmployeeData.fullName);
+        await pimPage.navigateToPIM();
+        await pimPage.searchEmployeeByName(newEmployeeData.fullName);
+        await pimPage.verifyEmployeeInTable(newEmployeeData.firstName, newEmployeeData.lastName);
+
+        // delete the created employee to keep the databese clean
+        await pimPage.deleteEmployee(newEmployeeData.firstName, newEmployeeData.lastName);
+    });
+
+    test('should search for an employee by name', async ({ pimPage, tempEmployee }) => {
+        await pimPage.navigateToPIM();
+        await pimPage.searchEmployeeByName(tempEmployee.fullName);
+        await pimPage.verifyEmployeeInTable(tempEmployee.firstName, tempEmployee.lastName);
+    });
+
+    test('should display error when trying to add employee without first name', async ({ pimPage }) => {
         await pimPage.addEmployeeWithoutFirstName();
         await pimPage.isErrorMessageDisplayed();
     });
 
-    test('should search for an employee by name', async () => {
-        const emp = empData.existingEmployee;
-        await pimPage.searchEmployeeByName(emp.fullName);
-        await pimPage.verifyEmployeeInTable(emp.firstName, emp.lastName);
+    test('should navigate to employee profile page when clicking on employee name', async ({ pimPage, tempEmployee }) => {
+        await pimPage.navigateToPIM();
+        await pimPage.searchEmployeeByName(tempEmployee.fullName);
+        await pimPage.verifyEmployeeInTable(tempEmployee.firstName, tempEmployee.lastName);
     });
 
-    test('should navigate to employee profile page when clicking on employee name', async ()=> {
-        const emp = empData.existingEmployee;
-        await pimPage.searchEmployeeByName(emp.fullName);
-        await pimPage.verifyEmployeeInTable(emp.firstName, emp.lastName);
-    });
-
-    test('should delete an employee', async () => {
-        const uniqueFirstName = `Test_${Date.now()}`;
-        const uniqueLastName = 'DeleteMe';
-        const fullName = `${uniqueFirstName} ${uniqueLastName}`;
-        await pimPage.addEmployee(uniqueFirstName, uniqueLastName);
-        await pimPage.verifyProfilePage(fullName);
+    test('should delete an employee', async ({ pimPage, newEmployeeData }) => {
+        await pimPage.addEmployee(newEmployeeData.firstName, newEmployeeData.lastName);
+        await pimPage.verifyProfilePage(newEmployeeData.fullName);
       
         await pimPage.navigateToPIM();
-
     
-        await pimPage.searchEmployeeByName(fullName);
-        await pimPage.deleteEmployee(uniqueFirstName, uniqueLastName);
-        await pimPage.isEmployeeDeleted(uniqueFirstName, uniqueLastName);
+        await pimPage.searchEmployeeByName(newEmployeeData.fullName);
+        await pimPage.deleteEmployee(newEmployeeData.firstName, newEmployeeData.lastName);
+        await pimPage.isEmployeeDeleted(newEmployeeData.firstName, newEmployeeData.lastName);
     });
 
-    test('should add several new employees', async ({ page }) => {
+    test('should add several new employees', async ({ pimPage, page, bulkNewEmployeeData }) => {
         test.setTimeout(90000); 
-        for (const emp of empData.bulkEmployees) {
+        for (const emp of bulkNewEmployeeData) {
             await pimPage.addEmployee(emp.firstName, emp.lastName);
             await pimPage.verifyProfilePage(emp.fullName);
             await page.waitForLoadState('networkidle'); 
@@ -73,13 +61,22 @@ test.describe('PIM Page Tests', () => {
             await pimPage.verifyEmployeeInTable(emp.firstName, emp.lastName);
             await page.getByRole('button', { name: 'Reset' }).click();
         }
+
+        for (const emp of bulkNewEmployeeData) {
+            await pimPage.searchEmployeeByName(emp.fullName);
+            await pimPage.deleteEmployee(emp.firstName, emp.lastName);
+        }
     });
 
-    test('should delete employees one by one', async () => {
-        for (const emp of empData.bulkEmployees) {
-            await pimPage.searchEmployeeByName(emp.firstName); 
+    test('should delete employees one by one', async ({ pimPage, tempBulkEmployees }) => {
+        test.setTimeout(90000);
+        await pimPage.navigateToPIM();
+        
+        for (const emp of tempBulkEmployees) {
+            await pimPage.searchEmployeeByName(emp.fullName); 
             await pimPage.deleteFirstResult(); 
             await pimPage.isEmployeeDeleted(emp.firstName, emp.lastName);
         }
+       
     }); 
 });
