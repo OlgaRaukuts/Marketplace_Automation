@@ -25,6 +25,11 @@ setup('authenticate via UI', async ({ page }) => {
     await loginButton.click();
   
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 15000 });
+    await page.waitForLoadState('networkidle');
+    const cookies = await page.context().cookies();
+    if (cookies.length === 0) {
+        throw new Error('No cookies found! Authentication likely failed.');
+    }
 
     await page.context().storageState({ path: authFile });
 });

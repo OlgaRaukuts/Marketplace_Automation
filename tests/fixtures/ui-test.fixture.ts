@@ -19,10 +19,15 @@ export const test = base.extend<MyFixtures>({
     },
 
     pimPage: async ({ page }, use) => {
-        const pimPage = new PIMPage(page);
+       const pimPage = new PIMPage(page);
+        
         await page.goto('/web/index.php/pim/viewEmployeeList');
         if (page.url().includes('login')) {
-            throw new Error('Authorization error: User is not logged in. Please log in before accessing the PIM page.');
+            console.log('Session missing. Performing emergency login...');
+            await page.locator('input[name="username"]').fill('Admin');
+            await page.locator('input[name="password"]').fill('admin123');
+            await page.locator('button[type="submit"]').click();
+            await page.waitForURL('**/pim/viewEmployeeList');
         }
 
         await page.waitForSelector('.oxd-table', { state: 'visible', timeout: 20000 });
@@ -63,8 +68,10 @@ export const test = base.extend<MyFixtures>({
         const responseBody = await response.json();
         const empNumber = responseBody.data.empNumber; 
 
+        // --- YIELD TO TEST ---
         await use({ ...newEmployeeData, empNumber });
 
+        // --- TEARDOWN (via API) ---
         if (empNumber) {
             await request.delete('/web/index.php/api/v2/pim/employees', {
                 data: { ids: [empNumber] }
@@ -75,6 +82,7 @@ export const test = base.extend<MyFixtures>({
     tempBulkEmployees: async ({ request, bulkNewEmployeeData }, use) => {
         const createdEmployees = [];
 
+        // --- SETUP (via API) ---
         for (const emp of bulkNewEmployeeData) {
             const response = await request.post('/web/index.php/api/v2/pim/employees', {
                 data: {
@@ -91,8 +99,10 @@ export const test = base.extend<MyFixtures>({
             }
         }
 
+        // --- YIELD TO TEST ---
         await use(createdEmployees);
 
+        // --- TEARDOWN (via API) ---
         const idsToDelete = createdEmployees.map(emp => emp.empNumber);
         if (idsToDelete.length > 0) {
             await request.delete('/web/index.php/api/v2/pim/employees', {
