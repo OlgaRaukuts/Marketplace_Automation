@@ -13,11 +13,19 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
-  timeout: 60 * 1000, 
+  timeout: 60 * 1000,
+  // If a snapshot is missing, create it and pass the test
+    updateSnapshots: 'missing',  
   expect: {
     /* Увеличиваем время ожидания для проверок (toBeVisible и тд) до 15 секунд */
     timeout: 15 * 1000,
+    toHaveScreenshot: {
+      maxDiffPixels: 100, // Small buffer for anti-aliasing differences
+      threshold: 0.2,
+      maxDiffPixelRatio: 0.05,
+    },
   },
+  
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */

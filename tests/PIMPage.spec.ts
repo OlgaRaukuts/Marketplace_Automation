@@ -33,6 +33,7 @@ test.describe('PIM Page Tests', () => {
         const error = await pimPage.getFirstNameErrorLocator();
         await expect(error).toBeVisible();
         await expect(error).toHaveText('Required');
+        await expect(error).toHaveCSS('color', 'rgb(235, 9, 16)');
         await expect(error).toHaveScreenshot('first-name-required-error.png');
     });
 
