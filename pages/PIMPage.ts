@@ -195,12 +195,10 @@ export class PIMPage {
     }
 
     /** Verify that error message is displayed when trying to add employee without first name */
-    async isErrorMessageDisplayed(): Promise<void> {
-        const firstNameGroup = this.page.locator('.oxd-input-group').filter({
-            has: this.page.locator('input[name="firstName"]')
-        });
-        const firstNameError = firstNameGroup.locator('.oxd-input-field-error-message');
-        await expect(firstNameError).toBeVisible();
-        await expect(firstNameError).toHaveText('Required');
-    }
+    // PIMPage.ts
+async getFirstNameErrorLocator() {
+    return this.page.locator('.oxd-input-group')
+        .filter({ has: this.page.locator('input[name="firstName"]') })
+        .locator('.oxd-input-field-error-message');
+}
 }

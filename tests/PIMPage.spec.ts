@@ -30,7 +30,10 @@ test.describe('PIM Page Tests', () => {
 
     test('should display error when trying to add employee without first name', async ({ pimPage }) => {
         await pimPage.addEmployeeWithoutFirstName();
-        await pimPage.isErrorMessageDisplayed();
+        const error = await pimPage.getFirstNameErrorLocator();
+        await expect(error).toBeVisible();
+        await expect(error).toHaveText('Required');
+        await expect(error).toHaveScreenshot('first-name-required-error.png');
     });
 
     test('should navigate to employee profile page when clicking on employee name', async ({ pimPage, tempEmployee }) => {
