@@ -18,7 +18,7 @@ test.describe('PIM Page Tests', () => {
         await pimPage.searchEmployeeByName(newEmployeeData.fullName);
         await pimPage.verifyEmployeeInTable(newEmployeeData.firstName, newEmployeeData.lastName);
 
-        // delete the created employee to keep the databese clean
+        // delete the created employee to keep the database clean
         await pimPage.deleteEmployee(newEmployeeData.firstName, newEmployeeData.lastName);
     });
 

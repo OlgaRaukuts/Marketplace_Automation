@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from "@playwright/test"; // Added 'expect' here
+import { clickButton, fillInput, waitForDomContentLoaded } from "../helpers/ui-actions";
 
 export class LoginPage {
     readonly page: Page;
@@ -27,7 +28,7 @@ export class LoginPage {
 
     /** Wait for the page to load completely */
     async waitForPageLoad(): Promise<void> {
-        await this.page.waitForLoadState('domcontentloaded');
+        await waitForDomContentLoaded(this.page);
     }
 
     /** Navigate to the Login page and wait for it to load */
@@ -38,9 +39,9 @@ export class LoginPage {
 
     /** Login to the page */
     async login(username: string, password: string): Promise<void> {
-        if (username) await this.usernameInput.fill(username);
-        if (password) await this.passwordInput.fill(password);
-        await this.loginButton.click();
+        if (username) await fillInput(this.usernameInput, username);
+        if (password) await fillInput(this.passwordInput, password);
+        await clickButton(this.loginButton);
     }
 
     /** Getting error alert text - uses ?? to ensure a string is always returned */
@@ -56,8 +57,8 @@ export class LoginPage {
 
     /** Logout from the account */
     async logout(): Promise<void> {
-        await this.userProfileDropdown.click();
-        await this.logoutLink.click();
+        await clickButton(this.userProfileDropdown);
+        await clickButton(this.logoutLink);
     }
 
 

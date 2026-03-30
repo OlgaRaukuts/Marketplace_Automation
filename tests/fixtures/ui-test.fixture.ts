@@ -1,7 +1,9 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect, type APIRequestContext } from '@playwright/test';
 import { faker } from '@faker-js/faker';
 import { PIMPage } from '../../pages/PIMPage';
 import { LoginPage } from '../../pages/LoginPage';
+import credentials from '../test-data/credentials.json';
+import { ensureLoggedIn } from '../../helpers/auth';
 
 type MyFixtures = {
     loginPage: LoginPage;
@@ -12,6 +14,40 @@ type MyFixtures = {
     tempBulkEmployees: Array<{ firstName: string; lastName: string; fullName: string; empNumber?: number }>;
 };
 
+async function createEmployeeViaApi(
+    request: APIRequestContext,
+    data: { firstName: string; middleName?: string; lastName: string; employeeId?: string },
+    maxAttempts = 3
+): Promise<{ body: any }> {
+    let lastErrorBody: string | undefined;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const response = await request.post('/web/index.php/api/v2/pim/employees', {
+            data: {
+                firstName: data.firstName,
+                middleName: data.middleName ?? '',
+                lastName: data.lastName,
+                employeeId: data.employeeId ?? '',
+            },
+        });
+
+        if (response.ok()) {
+            const body: any = await response.json();
+            return { body };
+        }
+
+        lastErrorBody = await response.text();
+
+        if (attempt < maxAttempts) {
+            await new Promise(res => setTimeout(res, 500));
+        }
+    }
+
+    throw new Error(
+        `Failed to create employee via API after ${maxAttempts} attempts. Last response body: ${lastErrorBody ?? 'no body'}`
+    );
+}
+
 export const test = base.extend<MyFixtures>({
     
     loginPage: async ({ page }, use) => {
@@ -21,14 +57,12 @@ export const test = base.extend<MyFixtures>({
     pimPage: async ({ page }, use) => {
        const pimPage = new PIMPage(page);
         
-        await page.goto('/web/index.php/pim/viewEmployeeList');
-        if (page.url().includes('login')) {
-            console.log('Session missing. Performing emergency login...');
-            await page.locator('input[name="username"]').fill('Admin');
-            await page.locator('input[name="password"]').fill('admin123');
-            await page.locator('button[type="submit"]').click();
-            await page.waitForURL('**/pim/viewEmployeeList');
-        }
+        await ensureLoggedIn(page, {
+            username: credentials.admin.username,
+            password: credentials.admin.password,
+            startUrl: '/web/index.php/pim/viewEmployeeList',
+            successUrl: '**/pim/viewEmployeeList',
+        });
 
         await page.waitForSelector('.oxd-table', { state: 'visible', timeout: 20000 });
         await use(pimPage);
@@ -52,51 +86,35 @@ export const test = base.extend<MyFixtures>({
         await use(employees);
     },
 
-    tempEmployee: async ({ request, newEmployeeData }, use) => {
-        // --- SETUP (via API) ---
-        const response = await request.post('/web/index.php/api/v2/pim/employees', {
-            data: {
-                firstName: newEmployeeData.firstName,
-                middleName: '',
-                lastName: newEmployeeData.lastName,
-                employeeId: '' 
-            }
+    tempEmployee: async ({ page, pimPage, newEmployeeData }, use) => {
+        const { body: responseBody } = await createEmployeeViaApi(page.request, {
+            firstName: newEmployeeData.firstName,
+            lastName: newEmployeeData.lastName,
         });
 
-        expect(response.ok()).toBeTruthy(); 
-   
-        const responseBody = await response.json();
-        const empNumber = responseBody.data.empNumber; 
+        const empNumber = responseBody.data?.empNumber;
 
         // --- YIELD TO TEST ---
         await use({ ...newEmployeeData, empNumber });
 
         // --- TEARDOWN (via API) ---
         if (empNumber) {
-            await request.delete('/web/index.php/api/v2/pim/employees', {
+            await page.request.delete('/web/index.php/api/v2/pim/employees', {
                 data: { ids: [empNumber] }
             });
         }
     },
 
-    tempBulkEmployees: async ({ request, bulkNewEmployeeData }, use) => {
-        const createdEmployees = [];
+    tempBulkEmployees: async ({ page, pimPage, bulkNewEmployeeData }, use) => {
+        const createdEmployees: Array<{ firstName: string; lastName: string; fullName: string; empNumber?: number }> = [];
 
         // --- SETUP (via API) ---
         for (const emp of bulkNewEmployeeData) {
-            const response = await request.post('/web/index.php/api/v2/pim/employees', {
-                data: {
-                    firstName: emp.firstName,
-                    middleName: '',
-                    lastName: emp.lastName,
-                    employeeId: ''
-                }
+            const { body } = await createEmployeeViaApi(page.request, {
+                firstName: emp.firstName,
+                lastName: emp.lastName,
             });
-            
-            if (response.ok()) {
-                const body = await response.json();
-                createdEmployees.push({ ...emp, empNumber: body.data.empNumber });
-            }
+            createdEmployees.push({ ...emp, empNumber: body.data?.empNumber });
         }
 
         // --- YIELD TO TEST ---
@@ -105,7 +123,7 @@ export const test = base.extend<MyFixtures>({
         // --- TEARDOWN (via API) ---
         const idsToDelete = createdEmployees.map(emp => emp.empNumber);
         if (idsToDelete.length > 0) {
-            await request.delete('/web/index.php/api/v2/pim/employees', {
+            await page.request.delete('/web/index.php/api/v2/pim/employees', {
                 data: { ids: idsToDelete }
             });
         }

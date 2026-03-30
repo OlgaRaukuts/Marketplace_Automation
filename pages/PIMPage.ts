@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from "@playwright/test";
+import { clickButton, fillInput, clearAndTypeSequentially, waitForDomContentLoaded, waitVisible } from "../helpers/ui-actions";
 
 export class PIMPage {
     readonly page: Page;
@@ -28,12 +29,12 @@ export class PIMPage {
 
     /** Wait for the page to load completely */
     async waitForPageLoad(): Promise<void> {
-        await this.page.waitForLoadState('domcontentloaded');
+        await waitForDomContentLoaded(this.page);
     }
 
     /** Navigate to the PIM page */
     async navigateToPIM(): Promise<void> {
-        await this.page.getByRole('link', { name: 'PIM' }).click();
+        await clickButton(this.page.getByRole('link', { name: 'PIM' }));
         const employeeInfoHeader = this.page.getByRole('heading', { name: 'Employee Information' });
         await expect(employeeInfoHeader).toBeVisible({ timeout: 15000 });
     }
@@ -41,12 +42,12 @@ export class PIMPage {
     /** Add a new employee  */
     async addEmployee(firstName: string, lastName: string): Promise<void> {
         await this.waitForPageLoad();
-        await this.addEmployeeButton.click();
-        await this.firstNameInput.waitFor({ state: 'visible', timeout: 15000 });
-        await this.firstNameInput.fill(firstName);
-        await this.lastNameInput.fill(lastName);
+        await clickButton(this.addEmployeeButton);
+        await waitVisible(this.firstNameInput, 15000);
+        await fillInput(this.firstNameInput, firstName);
+        await fillInput(this.lastNameInput, lastName);
         await this.saveButton.scrollIntoViewIfNeeded();
-        await this.saveButton.click();
+        await clickButton(this.saveButton);
         await this.page.waitForURL(/.*viewPersonalDetails.*/, { 
             timeout: 30000, 
             waitUntil: 'commit' 
@@ -56,18 +57,14 @@ export class PIMPage {
     /** Add an employee without first name*/
     async addEmployeeWithoutFirstName(): Promise<void> {
         await this.waitForPageLoad();
-        await this.addEmployeeButton.click();
-        await this.lastNameInput.fill('Smith');
-        await this.saveEmployeeButton.click();
+        await clickButton(this.addEmployeeButton);
+        await fillInput(this.lastNameInput, 'Smith');
+        await clickButton(this.saveEmployeeButton);
     }
 
     /** Search for an employee by name in the Employee List */
     async searchEmployeeByName(fullName: string): Promise<void> {
         await expect(this.employeeNameSearchInput).toBeVisible({ timeout: 15000 });
-        await this.employeeNameSearchInput.click();
-        
-        // 1. Очищаем поле правильным методом
-        await this.employeeNameSearchInput.clear();
 
         // 2. Готовим ожидание ответа от сервера ДО того, как начнем вводить текст
         const searchResponsePromise = this.page.waitForResponse(
@@ -76,7 +73,7 @@ export class PIMPage {
         ).catch(() => null);
 
         // 3. Печатаем посимвольно
-        await this.employeeNameSearchInput.pressSequentially(fullName, { delay: 100 });
+        await clearAndTypeSequentially(this.employeeNameSearchInput, fullName, { delay: 100, timeout: 15000 });
         
         // 4. Ждем завершения запроса
         await searchResponsePromise;
@@ -84,51 +81,49 @@ export class PIMPage {
         // 5. Ищем элемент выпадающего списка с помощью getByRole (более надежно)
         const dropdownOption = this.page.getByRole('option', { name: fullName }).first();
         await dropdownOption.waitFor({ state: 'visible', timeout: 10000 });
-        await dropdownOption.click();
+        await clickButton(dropdownOption);
         
-        await this.searchButton.click();
+        await clickButton(this.searchButton);
     }
 
     /** Search for an employee without choosing the name in the dropdown */
     async searchEmployee(fullName: string): Promise<void> {
         await expect(this.employeeNameSearchInput).toBeVisible({ timeout: 15000 });
-        await this.employeeNameSearchInput.click();
-        await this.employeeNameSearchInput.clear();
-        await this.employeeNameSearchInput.pressSequentially(fullName, { delay: 100 });
-        await this.searchButton.click();
+        await clearAndTypeSequentially(this.employeeNameSearchInput, fullName, { delay: 100, timeout: 15000 });
+        await clickButton(this.searchButton);
     }
 
     async clickEditEmployee(firstName: string, lastName: string): Promise<void> {
         const row = this.page.locator('.oxd-table-card')
             .filter({ hasText: firstName })
             .filter({ hasText: lastName });
-        await row.locator('.bi-pencil-fill').click();
+        await clickButton(row.locator('.bi-pencil-fill'));
     }
 
     async editEmployeeDetails(firstName: string, middleName: string, lastName: string): Promise<void> {
-        await this.firstNameInput.fill(firstName);
-        await this.lastNameInput.fill(lastName);
-        await this.middleNameInput.fill(middleName);
+        await fillInput(this.firstNameInput, firstName);
+        await fillInput(this.lastNameInput, lastName);
+        await fillInput(this.middleNameInput, middleName);
 
         const saveButton = this.page.locator('.orangehrm-edit-employee-content')
             .getByRole('button', { name: 'Save' });
 
-        await saveButton.click({ force: true });
+        await clickButton(saveButton, { force: true });
 
         const successToast = this.page.locator('.oxd-toast-content--success');
         await expect(successToast).toBeVisible({ timeout: 15000 });
 
         await expect(successToast).toBeHidden({ timeout: 15000 });
-        await this.page.waitForLoadState('domcontentloaded');
+        await waitForDomContentLoaded(this.page);
     }
 
     /** Delete an employee */
     async deleteEmployee(firstName: string, lastName: string): Promise<void> {
         const row = this.page.locator('.oxd-table-card').filter({ hasText: firstName }).filter({ hasText: lastName }).first();
-        await row.locator('i.bi-trash').click();
+        await clickButton(row.locator('i.bi-trash'));
         const confirmButton = this.page.getByRole('button', { name: 'Yes, Delete' });
         await confirmButton.waitFor({ state: 'visible' });
-        await confirmButton.click();
+        await clickButton(confirmButton);
     }
 
     /** Delete several employees at once */
@@ -142,12 +137,12 @@ export class PIMPage {
             return;
         }
 
-        await firstRow.locator('.bi-trash').click();
+        await clickButton(firstRow.locator('.bi-trash'));
 
         const confirmButton = this.page.getByRole('button', { name: /Yes, Delete/i });
 
         await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
-        await confirmButton.click();
+        await clickButton(confirmButton);
 
         await expect(this.page.locator('.oxd-toast')).toHaveCount(0, { timeout: 10000 });
     }

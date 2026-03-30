@@ -1,15 +1,15 @@
 import { test, expect } from './fixtures/api-mock.fixture';
+import credentials from './test-data/credentials.json';
+import { ensureLoggedIn } from '../helpers/auth';
 
 test.describe('(Mocking Tests) - Employee List - Refactored', () => {
 test.beforeEach(async ({ page }) => {
-    await page.goto('/web/index.php/dashboard/index');
-    // If we get kicked to login, log in manually
-    if (page.url().includes('login')) {
-        await page.locator('input[name="username"]').fill('Admin');
-        await page.locator('input[name="password"]').fill('admin123');
-        await page.locator('button[type="submit"]').click();
-        await page.waitForURL('**/dashboard/index');
-    }
+    await ensureLoggedIn(page, {
+        username: credentials.admin.username,
+        password: credentials.admin.password,
+        startUrl: '/web/index.php/dashboard/index',
+        successUrl: '**/dashboard/index',
+    });
 });
 
     test('Should display error toast when API returns 500', async ({ page, mockApi }) => {
