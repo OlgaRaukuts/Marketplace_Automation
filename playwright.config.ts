@@ -13,6 +13,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
+  globalSetup: './tests/setup/global.setup.ts',
   timeout: 60 * 1000,
   // If a snapshot is missing, create it and pass the test
     updateSnapshots: 'missing',  
@@ -56,14 +57,12 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
   {
     name: 'chromium',
     use: { 
       ...devices['Desktop Chrome'],
       storageState: 'playwright/.auth/user.json', // Use the saved state
     },
-    dependencies: ['setup'],
   },
 /* {
       name: 'smoke',

@@ -24,7 +24,7 @@ UI and API-assisted end-to-end test automation for the OrangeHRM demo applicatio
   - `PIMPage.ts` - PIM page object and employee actions/assertions
 - `helpers/`
   - `ui-actions.ts` - reusable UI actions (`clickButton`, `fillInput`, etc.)
-  - `auth.ts` - shared login/session helpers (`loginViaUi`, `ensureLoggedIn`)
+  - `auth.ts` - shared authentication helper (`loginViaUi`)
 - `tests/`
   - `loginPage.spec.ts` - login/logout happy paths
   - `loginPage-negative.spec.ts` - negative and UI login checks
@@ -33,7 +33,7 @@ UI and API-assisted end-to-end test automation for the OrangeHRM demo applicatio
   - `fixtures/`
     - `ui-test.fixture.ts` - custom fixtures (`loginPage`, `pimPage`, temp employees, faker data)
     - `api-mock.fixture.ts` - API mocking fixture
-  - `setup/auth.setup.ts` - authentication bootstrap for storage state
+  - `setup/global.setup.ts` - global authentication bootstrap for storage state
   - `test-data/credentials.json` - credentials test data
 - `playwright.config.ts` - global test configuration
 
@@ -87,9 +87,9 @@ npx playwright test --ui
 
 ## Authentication Model
 
-- `tests/setup/auth.setup.ts` creates `playwright/.auth/user.json`.
-- Main Chromium project depends on setup project and reuses stored authenticated state.
-- Fixtures include safety login via shared helper to recover from expired sessions.
+- `tests/setup/global.setup.ts` logs in once before test execution and creates `playwright/.auth/user.json`.
+- The Chromium project reuses that stored authenticated state for all tests.
+- Regular tests/fixtures no longer perform UI login flow on each test.
 
 ## Fixtures and Data Strategy
 

@@ -56,7 +56,7 @@ export const test = base.extend<MyFixtures>({
 
     pimPage: async ({ page }, use) => {
        const pimPage = new PIMPage(page);
-        
+
         await ensureLoggedIn(page, {
             username: credentials.admin.username,
             password: credentials.admin.password,
