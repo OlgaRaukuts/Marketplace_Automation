@@ -23,6 +23,7 @@
     "@playwright/test": "^1.57.0",
     "@types/node": "^25.0.8",
     "allure-commandline": "^2.38.0",
-    "allure-playwright": "^3.6.0"
+    "allure-playwright": "^3.6.0",
+    "typescript": "~5.7.0"
   }
 }
