@@ -25,7 +25,7 @@ export default defineConfig({
   globalSetup: './tests/setup/global.setup.ts',
   timeout: 60 * 1000,
   // If a snapshot is missing, create it and pass the test
-    updateSnapshots: 'missing',  
+  updateSnapshots: 'missing',
   expect: {
     /* Увеличиваем время ожидания для проверок (toBeVisible и тд) до 15 секунд */
     timeout: 15 * 1000,
@@ -35,7 +35,7 @@ export default defineConfig({
       maxDiffPixelRatio: 0.05,
     },
   },
-  
+
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -54,12 +54,12 @@ export default defineConfig({
     baseURL: 'https://opensource-demo.orangehrmlive.com',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-// 1. Force the browser language to English
+    // 1. Force the browser language to English
     locale: 'en-US',
-    
+
     // 2. Force a North American timezone
     timezoneId: 'America/New_York',
-    
+
     // 3. Force the network headers to request English content
     extraHTTPHeaders: {
       'Accept-Language': 'en-US,en;q=0.9',

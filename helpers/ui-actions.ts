@@ -6,7 +6,7 @@ export async function waitVisible(locator: Locator, timeout = 15_000): Promise<v
 
 export async function clickButton(
   locator: Locator,
-  options?: { timeout?: number; force?: boolean }
+  options?: { timeout?: number; force?: boolean },
 ): Promise<void> {
   const timeout = options?.timeout ?? 15_000;
   await waitVisible(locator, timeout);
@@ -16,7 +16,7 @@ export async function clickButton(
 export async function fillInput(
   locator: Locator,
   value: string,
-  options?: { timeout?: number; clear?: boolean }
+  options?: { timeout?: number; clear?: boolean },
 ): Promise<void> {
   const timeout = options?.timeout ?? 15_000;
   await waitVisible(locator, timeout);
@@ -29,7 +29,7 @@ export async function fillInput(
 export async function clearAndTypeSequentially(
   locator: Locator,
   value: string,
-  options?: { timeout?: number; delay?: number }
+  options?: { timeout?: number; delay?: number },
 ): Promise<void> {
   const timeout = options?.timeout ?? 15_000;
   const delay = options?.delay ?? 100;
@@ -42,4 +42,3 @@ export async function clearAndTypeSequentially(
 export async function waitForDomContentLoaded(page: Page): Promise<void> {
   await page.waitForLoadState('domcontentloaded');
 }
-

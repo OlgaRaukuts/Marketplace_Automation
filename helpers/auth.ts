@@ -25,7 +25,7 @@ export async function loginViaUi(page: Page, opts: LoginOptions): Promise<void> 
 
 export async function ensureLoggedIn(
   page: Page,
-  opts: LoginOptions & { loginUrlIncludes?: string }
+  opts: LoginOptions & { loginUrlIncludes?: string },
 ): Promise<void> {
   const loginUrlIncludes = opts.loginUrlIncludes ?? 'login';
 
@@ -36,4 +36,3 @@ export async function ensureLoggedIn(
 
   await loginViaUi(page, opts);
 }
-

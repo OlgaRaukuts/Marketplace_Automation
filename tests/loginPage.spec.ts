@@ -6,24 +6,24 @@ import credentials from '../tests/test-data/credentials.json';
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test.describe('Authentication Flows', () => {
-    let loginPage: LoginPage;
+  let loginPage: LoginPage;
 
-    test.beforeEach(async ({ page }) => {
-        loginPage = new LoginPage(page);
-        await loginPage.goto();
-    });
+  test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page);
+    await loginPage.goto();
+  });
 
-    test('Successful Login', async ({ page }) => {
-        await loginPage.login(credentials.admin.username, credentials.admin.password);
-        await loginPage.expectedLoginSuccess();
-    });
+  test('Successful Login', async ({ page }) => {
+    await loginPage.login(credentials.admin.username, credentials.admin.password);
+    await loginPage.expectedLoginSuccess();
+  });
 
-    test('Successful Logout', async () => {
-        // We must log in first to test the logout
-        await loginPage.login(credentials.admin.username, credentials.admin.password);
-        await loginPage.expectedLoginSuccess();
-        
-        await loginPage.logout();
-        await loginPage.expectLoggedOut();
-    });
+  test('Successful Logout', async () => {
+    // We must log in first to test the logout
+    await loginPage.login(credentials.admin.username, credentials.admin.password);
+    await loginPage.expectedLoginSuccess();
+
+    await loginPage.logout();
+    await loginPage.expectLoggedOut();
+  });
 });

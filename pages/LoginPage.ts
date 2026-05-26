@@ -1,94 +1,91 @@
-import { Page, Locator, expect } from "@playwright/test"; // Added 'expect' here
-import { clickButton, fillInput, waitForDomContentLoaded } from "../helpers/ui-actions";
+import { Page, Locator, expect } from '@playwright/test'; // Added 'expect' here
+import { clickButton, fillInput, waitForDomContentLoaded } from '../helpers/ui-actions';
 
 export class LoginPage {
-    readonly page: Page;
-    readonly usernameInput: Locator;
-    readonly passwordInput: Locator;
-    readonly loginButton: Locator;
-    readonly errorAlert: Locator;
-    readonly requiredMessage: Locator;
-    readonly logoutLink: Locator;
-    readonly dashboard: Locator;
-    readonly loginHeading: Locator;
-    readonly userProfileDropdown: Locator;
+  readonly page: Page;
+  readonly usernameInput: Locator;
+  readonly passwordInput: Locator;
+  readonly loginButton: Locator;
+  readonly errorAlert: Locator;
+  readonly requiredMessage: Locator;
+  readonly logoutLink: Locator;
+  readonly dashboard: Locator;
+  readonly loginHeading: Locator;
+  readonly userProfileDropdown: Locator;
 
-    constructor(page: Page) {
-        this.page = page;
-        this.usernameInput = page.locator('input[name="username"]');
-        this.passwordInput = page.locator('input[name="password"]');
-        this.loginButton = page.getByRole('button', { name: 'Login' });
-        this.errorAlert = page.getByRole('alert');
-        this.requiredMessage = page.locator('text=Required');
-        this.logoutLink = page.getByRole('menuitem', { name: 'Logout' });
-        this.dashboard = page.getByRole('heading',{name: 'Dashboard'});
-        this.loginHeading = page.getByRole('heading', { level: 5, name: 'Login' });
-        this.userProfileDropdown = page.locator('.oxd-userdropdown-tab');
-    }
+  constructor(page: Page) {
+    this.page = page;
+    this.usernameInput = page.locator('input[name="username"]');
+    this.passwordInput = page.locator('input[name="password"]');
+    this.loginButton = page.getByRole('button', { name: 'Login' });
+    this.errorAlert = page.getByRole('alert');
+    this.requiredMessage = page.locator('text=Required');
+    this.logoutLink = page.getByRole('menuitem', { name: 'Logout' });
+    this.dashboard = page.getByRole('heading', { name: 'Dashboard' });
+    this.loginHeading = page.getByRole('heading', { level: 5, name: 'Login' });
+    this.userProfileDropdown = page.locator('.oxd-userdropdown-tab');
+  }
 
-    /** Wait for the page to load completely */
-    async waitForPageLoad(): Promise<void> {
-        await waitForDomContentLoaded(this.page);
-    }
+  /** Wait for the page to load completely */
+  async waitForPageLoad(): Promise<void> {
+    await waitForDomContentLoaded(this.page);
+  }
 
-    /** Navigate to the Login page and wait for it to load */
-    async goto(): Promise<void> {
-        await this.page.goto('https://opensource-demo.orangehrmlive.com/web/index.php/auth/login');
-        await this.waitForPageLoad();
-    }
+  /** Navigate to the Login page and wait for it to load */
+  async goto(): Promise<void> {
+    await this.page.goto('https://opensource-demo.orangehrmlive.com/web/index.php/auth/login');
+    await this.waitForPageLoad();
+  }
 
-    /** Login to the page */
-    async login(username: string, password: string): Promise<void> {
-        if (username) await fillInput(this.usernameInput, username);
-        if (password) await fillInput(this.passwordInput, password);
-        await clickButton(this.loginButton);
-    }
+  /** Login to the page */
+  async login(username: string, password: string): Promise<void> {
+    if (username) await fillInput(this.usernameInput, username);
+    if (password) await fillInput(this.passwordInput, password);
+    await clickButton(this.loginButton);
+  }
 
-    /** Getting error alert text - uses ?? to ensure a string is always returned */
-    async errorAlertText(): Promise<string> {
-        return (await this.errorAlert.textContent()) ?? '';
-    }
+  /** Getting error alert text - uses ?? to ensure a string is always returned */
+  async errorAlertText(): Promise<string> {
+    return (await this.errorAlert.textContent()) ?? '';
+  }
 
-    /** Getting required message text */
-    async requiredMessageText(): Promise<string>{
-        return (await this.requiredMessage.textContent()) ?? '';
-    }
+  /** Getting required message text */
+  async requiredMessageText(): Promise<string> {
+    return (await this.requiredMessage.textContent()) ?? '';
+  }
 
+  /** Logout from the account */
+  async logout(): Promise<void> {
+    await clickButton(this.userProfileDropdown);
+    await clickButton(this.logoutLink);
+  }
 
-    /** Logout from the account */
-    async logout(): Promise<void> {
-        await clickButton(this.userProfileDropdown);
-        await clickButton(this.logoutLink);
-    }
+  /** Check if the user is logged out with auto-waiting assertions */
+  async expectLoggedOut(): Promise<void> {
+    await expect(this.page).toHaveURL(/.*\/auth\/login/);
+    await expect(this.loginHeading).toBeVisible();
+  }
 
-
-    /** Check if the user is logged out with auto-waiting assertions */
-    async expectLoggedOut(): Promise<void> {
-        await expect(this.page).toHaveURL(/.*\/auth\/login/);
-        await expect(this.loginHeading).toBeVisible();
-    }
-
-    /** Verifies the user is successfully logged in and redirected to the Account page */
-// pages/LoginPage.ts
-    async expectedLoginSuccess(): Promise<void> {
+  /** Verifies the user is successfully logged in and redirected to the Account page */
+  // pages/LoginPage.ts
+  async expectedLoginSuccess(): Promise<void> {
     await expect(this.page).toHaveURL(/.*dashboard.*/, { timeout: 10000 });
     await this.page.waitForSelector('h6.oxd-topbar-header-breadcrumb-module', { state: 'visible' });
     await expect(this.page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
-}
+  }
 
-    /** Verify that the login error message is displayed */
-    async expectLoginError(): Promise<void> {
-        await expect(this.errorAlert).toBeVisible();
-        await expect(this.errorAlert).toHaveText(/Invalid credentials/);
-    }
-    
-/** Verify that the required message is displayed */
-    async expectRequiredMessage(): Promise<void> {
-        // Assert that exactly 2 error messages appear on the screen
-        await expect(this.requiredMessage).toHaveCount(2);
-        
-        // Assert that the first one contains the text "Required"
-        await expect(this.requiredMessage.first()).toHaveText(/Required/i);
-    }
+  /** Verify that the login error message is displayed */
+  async expectLoginError(): Promise<void> {
+    await expect(this.errorAlert).toBeVisible();
+    await expect(this.errorAlert).toHaveText(/Invalid credentials/);
+  }
 
+  /** Verify that the required message is displayed */
+  async expectRequiredMessage(): Promise<void> {
+    // Assert that exactly 2 error messages appear on the screen
+    await expect(this.requiredMessage).toHaveCount(2);
+
+    // Assert that the first one contains the text "Required"
+    await expect(this.requiredMessage.first()).toHaveText(/Required/i);
+  }
 }

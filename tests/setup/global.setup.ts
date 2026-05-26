@@ -39,4 +39,3 @@ async function globalSetup(config: FullConfig): Promise<void> {
 }
 
 export default globalSetup;
-
