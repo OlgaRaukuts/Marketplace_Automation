@@ -47,11 +47,27 @@ export class PIMPage {
         await fillInput(this.firstNameInput, firstName);
         await fillInput(this.lastNameInput, lastName);
         await this.saveButton.scrollIntoViewIfNeeded();
+
+        const saveResponsePromise = this.page.waitForResponse(
+            (response) =>
+                response.url().includes('/api/v2/pim/employees') &&
+                response.request().method() === 'POST',
+            { timeout: 45_000 }
+        );
+
         await clickButton(this.saveButton);
-        await this.page.waitForURL(/.*viewPersonalDetails.*/, { 
-            timeout: 30000, 
-            waitUntil: 'commit' 
-        }); 
+        const saveResponse = await saveResponsePromise;
+
+        if (!saveResponse.ok()) {
+            const body = await saveResponse.text().catch(() => '');
+            throw new Error(`Employee save failed (${saveResponse.status()}): ${body}`);
+        }
+
+        await this.page.waitForURL(/.*viewPersonalDetails.*/, { timeout: 45_000 });
+        await expect(this.page.locator('.orangehrm-edit-employee-name h6')).toContainText(
+            firstName,
+            { timeout: 15_000 }
+        );
     }
 
     /** Add an employee without first name*/

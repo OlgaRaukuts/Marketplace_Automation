@@ -3,6 +3,8 @@ import fs from 'fs';
 
 
 test.describe('PIM Page Tests', () => {
+    // Shared demo DB: avoid parallel PIM mutations within each browser project
+    test.describe.configure({ mode: 'serial' });
 
     test('should display PIM page', async ({ pimPage }) => {
         await pimPage.isPIMPageDisplayed();
@@ -35,13 +37,14 @@ test.describe('PIM Page Tests', () => {
         await expect(error).toBeVisible();
         await expect(error).toHaveText('Required');
         await expect(error).toHaveCSS('color', 'rgb(235, 9, 16)');
-        const snapshotPath = testInfo.snapshotPath('first-name-required-error.png');
-        if (fs.existsSync(snapshotPath)) {
-            await expect(error).toHaveScreenshot('first-name-required-error.png');
-        } else {
-            // Snapshot is missing (e.g. first run on a fresh clone). Keep functional checks.
-            // To enforce screenshots, commit the missing snapshot or run Playwright with snapshot updates.
-            console.warn(`[snapshot missing] ${snapshotPath}`);
+        // Visual snapshot is checked on Chromium only (one baseline per OS)
+        if (testInfo.project.name === 'chromium') {
+            const snapshotPath = testInfo.snapshotPath('first-name-required-error.png');
+            if (fs.existsSync(snapshotPath)) {
+                await expect(error).toHaveScreenshot('first-name-required-error.png');
+            } else {
+                console.warn(`[snapshot missing] ${snapshotPath}`);
+            }
         }
     });
 
@@ -63,11 +66,11 @@ test.describe('PIM Page Tests', () => {
     });
 
     test('should add several new employees', async ({ pimPage, page, bulkNewEmployeeData }) => {
-        test.setTimeout(90000); 
+        test.setTimeout(180_000);
         for (const emp of bulkNewEmployeeData) {
             await pimPage.addEmployee(emp.firstName, emp.lastName);
             await pimPage.verifyProfilePage(emp.fullName);
-            await page.waitForLoadState('networkidle'); 
+            await page.waitForLoadState('domcontentloaded');
             await pimPage.navigateToPIM();
             await pimPage.searchEmployeeByName(emp.fullName);
             await pimPage.verifyEmployeeInTable(emp.firstName, emp.lastName);

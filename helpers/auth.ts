@@ -4,9 +4,7 @@ import { clickButton, fillInput, waitForDomContentLoaded } from './ui-actions';
 type LoginOptions = {
   username: string;
   password: string;
-  /** URL (relative or absolute) to open before checking login */
   startUrl: string;
-  /** URL pattern to wait for after login */
   successUrl: string | RegExp;
 };
 
