@@ -48,26 +48,29 @@ export class PIMPage {
         await fillInput(this.lastNameInput, lastName);
         await this.saveButton.scrollIntoViewIfNeeded();
 
-        const saveResponsePromise = this.page.waitForResponse(
-            (response) =>
-                response.url().includes('/api/v2/pim/employees') &&
-                response.request().method() === 'POST',
-            { timeout: 45_000 }
-        );
-
         await clickButton(this.saveButton);
-        const saveResponse = await saveResponsePromise;
+        await this.waitForEmployeeProfilePage(firstName);
+    }
 
-        if (!saveResponse.ok()) {
-            const body = await saveResponse.text().catch(() => '');
-            throw new Error(`Employee save failed (${saveResponse.status()}): ${body}`);
+    /** Wait until the employee profile page is shown after save */
+    private async waitForEmployeeProfilePage(firstName: string): Promise<void> {
+        const profileHeader = this.page.locator('.orangehrm-edit-employee-name h6');
+
+        try {
+            await Promise.race([
+                this.page.waitForURL(/.*viewPersonalDetails.*/, { timeout: 45_000 }),
+                profileHeader.filter({ hasText: firstName }).waitFor({ state: 'visible', timeout: 45_000 }),
+            ]);
+        } catch {
+            const errorToast = this.page.locator('.oxd-toast--error');
+            if (await errorToast.isVisible().catch(() => false)) {
+                const message = (await errorToast.textContent())?.trim() || 'Unknown error';
+                throw new Error(`Employee save failed: ${message}`);
+            }
+            throw new Error(`Employee profile page did not load for "${firstName}"`);
         }
 
-        await this.page.waitForURL(/.*viewPersonalDetails.*/, { timeout: 45_000 });
-        await expect(this.page.locator('.orangehrm-edit-employee-name h6')).toContainText(
-            firstName,
-            { timeout: 15_000 }
-        );
+        await expect(profileHeader).toContainText(firstName, { timeout: 15_000 });
     }
 
     /** Add an employee without first name*/
@@ -182,9 +185,9 @@ export class PIMPage {
 
     /** Verification: Check that we are on the employee profile page */
     async verifyProfilePage(fullName: string): Promise<void> {
-        await this.page.waitForURL(/.*viewPersonalDetails.*/);
+        await this.page.waitForURL(/.*viewPersonalDetails.*/, { timeout: 45_000 });
         const header = this.page.locator('.orangehrm-edit-employee-name h6');
-        await expect(header).toContainText(fullName, { timeout: 30000 });
+        await expect(header).toContainText(fullName, { timeout: 30_000 });
     }
 
     /** Verification: Check First and Last, and log/warn about Middle Name instead of crashing */
