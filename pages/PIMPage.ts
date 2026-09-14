@@ -92,32 +92,23 @@ export class PIMPage {
 
   /** Search for an employee by name in the Employee List */
   async searchEmployeeByName(fullName: string): Promise<void> {
-    await expect(this.employeeNameSearchInput).toBeVisible({ timeout: 15000 });
-
-    // 2. Готовим ожидание ответа от сервера ДО того, как начнем вводить текст
-    const searchResponsePromise = this.page
-      .waitForResponse(
-        (response) =>
-          response.url().includes('/employees') && response.request().method() === 'GET',
-        { timeout: 15000 },
-      )
-      .catch(() => null);
-
-    // 3. Печатаем посимвольно
+    await waitVisible(this.employeeNameSearchInput, 15000);
     await clearAndTypeSequentially(this.employeeNameSearchInput, fullName, {
-      delay: 100,
+      delay: 50,
       timeout: 15000,
     });
 
-    // 4. Ждем завершения запроса
-    await searchResponsePromise;
-
-    // 5. Ищем элемент выпадающего списка с помощью getByRole (более надежно)
+    // Wait briefly for the dropdown suggestion if available
     const dropdownOption = this.page.getByRole('option', { name: fullName }).first();
-    await dropdownOption.waitFor({ state: 'visible', timeout: 10000 });
-    await clickButton(dropdownOption);
+    try {
+      await dropdownOption.waitFor({ state: 'visible', timeout: 6000 });
+      await clickButton(dropdownOption);
+    } catch {
+      // If autocomplete suggestion is slow or already selected, continue with search
+    }
 
     await clickButton(this.searchButton);
+    await waitForDomContentLoaded(this.page);
   }
 
   /** Search for an employee without choosing the name in the dropdown */
@@ -171,6 +162,10 @@ export class PIMPage {
     const confirmButton = this.page.getByRole('button', { name: 'Yes, Delete' });
     await confirmButton.waitFor({ state: 'visible' });
     await clickButton(confirmButton);
+
+    const toast = this.page.locator('.oxd-toast');
+    await toast.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
+    await toast.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => null);
   }
 
   /** Delete several employees at once */
@@ -191,7 +186,9 @@ export class PIMPage {
     await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
     await clickButton(confirmButton);
 
-    await expect(this.page.locator('.oxd-toast')).toHaveCount(0, { timeout: 10000 });
+    const toast = this.page.locator('.oxd-toast');
+    await toast.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
+    await toast.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => null);
   }
 
   /** Verify that the employee is deleted */

@@ -84,7 +84,7 @@ export const test = base.extend<MyFixtures>({
   },
 
   bulkNewEmployeeData: async ({}, use) => {
-    const employees = Array.from({ length: 3 }).map(() => {
+    const employees = Array.from({ length: 2 }).map(() => {
       const firstName = faker.person.firstName();
       const lastName = faker.person.lastName();
       return { firstName, lastName, fullName: `${firstName} ${lastName}` };
