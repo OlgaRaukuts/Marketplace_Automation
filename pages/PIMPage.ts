@@ -170,7 +170,7 @@ export class PIMPage {
       .filter({ hasText: firstName })
       .filter({ hasText: lastName })
       .first();
-    await clickButton(row.locator('i.bi-trash'));
+    await clickButton(row.locator('button:has(.bi-trash), .bi-trash').first());
     const confirmButton = this.page.getByRole('button', { name: 'Yes, Delete' });
     await confirmButton.waitFor({ state: 'visible' });
 
@@ -183,6 +183,7 @@ export class PIMPage {
 
     await clickButton(confirmButton);
     await deleteResponse;
+    await this.page.locator('.oxd-dialog-sheet').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => null);
   }
 
   /** Delete several employees at once */
@@ -196,7 +197,7 @@ export class PIMPage {
       return;
     }
 
-    await clickButton(firstRow.locator('.bi-trash'));
+    await clickButton(firstRow.locator('button:has(.bi-trash), .bi-trash').first());
 
     const confirmButton = this.page.getByRole('button', { name: /Yes, Delete/i });
     await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
@@ -210,6 +211,7 @@ export class PIMPage {
 
     await clickButton(confirmButton);
     await deleteResponse;
+    await this.page.locator('.oxd-dialog-sheet').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => null);
   }
 
   /** Verify that the employee is deleted */
@@ -218,7 +220,14 @@ export class PIMPage {
       .locator('.oxd-table-card')
       .filter({ hasText: firstName })
       .filter({ hasText: lastName });
-    await expect(row).toHaveCount(0, { timeout: 15000 });
+
+    try {
+      await expect(row).toHaveCount(0, { timeout: 10000 });
+    } catch {
+      // If OrangeHRM didn't refresh the table DOM after deletion, re-search to verify
+      await this.searchEmployeeByName(`${firstName} ${lastName}`);
+      await expect(row).toHaveCount(0, { timeout: 10000 });
+    }
   }
 
   /**Verify that the PIM page is displayed */
