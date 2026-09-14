@@ -55,7 +55,9 @@ async function createEmployeeViaApi(
 
 export const test = base.extend<MyFixtures>({
   loginPage: async ({ page }, use) => {
-    await use(new LoginPage(page));
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await use(loginPage);
   },
 
   pimPage: async ({ page }, use) => {
