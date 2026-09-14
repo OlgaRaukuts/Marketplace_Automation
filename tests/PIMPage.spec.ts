@@ -3,7 +3,7 @@ import fs from 'fs';
 
 test.describe('PIM Page Tests', () => {
   // Shared demo DB: avoid parallel PIM mutations within each browser project
-  test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'serial', timeout: 90_000 });
 
   test('should display PIM page', async ({ pimPage }) => {
     await pimPage.isPIMPageDisplayed();

@@ -29,7 +29,13 @@ export async function ensureLoggedIn(
 ): Promise<void> {
   const loginUrlIncludes = opts.loginUrlIncludes ?? 'login';
 
-  await page.goto(opts.startUrl, { waitUntil: 'domcontentloaded' });
+  try {
+    await page.goto(opts.startUrl, { waitUntil: 'domcontentloaded' });
+  } catch {
+    await page.waitForTimeout(500);
+    await page.goto(opts.startUrl, { waitUntil: 'domcontentloaded' });
+  }
+
   if (!page.url().includes(loginUrlIncludes)) {
     return;
   }

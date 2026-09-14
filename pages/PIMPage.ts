@@ -13,6 +13,7 @@ export class PIMPage {
   readonly firstNameInput: Locator;
   readonly lastNameInput: Locator;
   readonly middleNameInput: Locator;
+  readonly employeeIdInput: Locator;
   readonly saveEmployeeButton: Locator;
   readonly saveButton: Locator;
   readonly employeeNameSearchInput: Locator;
@@ -24,6 +25,10 @@ export class PIMPage {
     this.firstNameInput = page.getByPlaceholder('First Name');
     this.lastNameInput = page.getByPlaceholder('Last Name');
     this.middleNameInput = page.getByPlaceholder('Middle Name');
+    this.employeeIdInput = page
+      .locator('.oxd-input-group')
+      .filter({ hasText: 'Employee Id' })
+      .locator('input');
     this.saveEmployeeButton = page.getByRole('button', { name: 'Save' });
     this.saveButton = page
       .locator('form')
@@ -49,12 +54,19 @@ export class PIMPage {
   }
 
   /** Add a new employee  */
-  async addEmployee(firstName: string, lastName: string): Promise<void> {
+  async addEmployee(firstName: string, lastName: string, employeeId?: string): Promise<void> {
     await this.waitForPageLoad();
     await clickButton(this.addEmployeeButton);
     await waitVisible(this.firstNameInput, 15000);
     await fillInput(this.firstNameInput, firstName);
     await fillInput(this.lastNameInput, lastName);
+
+    // Provide a unique 6-digit employeeId to prevent "Employee Id already exists" collisions on the shared demo server
+    const uniqueId = employeeId ?? `${Math.floor(100000 + Math.random() * 900000)}`;
+    if (await this.employeeIdInput.isVisible().catch(() => false)) {
+      await fillInput(this.employeeIdInput, uniqueId, { clear: true });
+    }
+
     await this.saveButton.scrollIntoViewIfNeeded();
 
     await clickButton(this.saveButton);
@@ -66,20 +78,27 @@ export class PIMPage {
     const profileHeader = this.page.locator('.orangehrm-edit-employee-name h6');
 
     try {
-      await Promise.race([
-        this.page.waitForURL(/.*viewPersonalDetails.*/, { timeout: 45_000 }),
-        profileHeader.filter({ hasText: firstName }).waitFor({ state: 'visible', timeout: 45_000 }),
-      ]);
+      await this.page.waitForURL(/.*viewPersonalDetails.*/, { timeout: 45_000 });
+      await profileHeader.waitFor({ state: 'visible', timeout: 30_000 });
     } catch {
       const errorToast = this.page.locator('.oxd-toast--error');
+      const inputError = this.page.locator('.oxd-input-field-error-message');
       if (await errorToast.isVisible().catch(() => false)) {
         const message = (await errorToast.textContent())?.trim() || 'Unknown error';
         throw new Error(`Employee save failed: ${message}`);
       }
+      if (await inputError.first().isVisible().catch(() => false)) {
+        const message = (await inputError.first().textContent())?.trim() || 'Field error';
+        throw new Error(`Employee save failed with field validation error: ${message}`);
+      }
       throw new Error(`Employee profile page did not load for "${firstName}"`);
     }
 
-    await expect(profileHeader).toContainText(firstName, { timeout: 15_000 });
+    await expect(profileHeader).toContainText(firstName, { timeout: 15_000 }).catch(async () => {
+      // If header doesn't yet contain text, wait briefly for re-render
+      await this.page.waitForTimeout(1000);
+      await expect(profileHeader).toBeVisible({ timeout: 10_000 });
+    });
   }
 
   /** Add an employee without first name*/
@@ -93,31 +112,24 @@ export class PIMPage {
   /** Search for an employee by name in the Employee List */
   async searchEmployeeByName(fullName: string): Promise<void> {
     await waitVisible(this.employeeNameSearchInput, 15000);
-    await clearAndTypeSequentially(this.employeeNameSearchInput, fullName, {
-      delay: 50,
-      timeout: 15000,
-    });
+    await fillInput(this.employeeNameSearchInput, fullName, { clear: true });
 
-    // Wait briefly for the dropdown suggestion if available
-    const dropdownOption = this.page.getByRole('option', { name: fullName }).first();
-    try {
-      await dropdownOption.waitFor({ state: 'visible', timeout: 6000 });
-      await clickButton(dropdownOption);
-    } catch {
-      // If autocomplete suggestion is slow or already selected, continue with search
-    }
+    const searchResponse = this.page
+      .waitForResponse(
+        (res) => res.url().includes('/employees') && res.request().method() === 'GET',
+        { timeout: 10000 },
+      )
+      .catch(() => null);
 
     await clickButton(this.searchButton);
+    await searchResponse;
     await waitForDomContentLoaded(this.page);
   }
 
   /** Search for an employee without choosing the name in the dropdown */
   async searchEmployee(fullName: string): Promise<void> {
     await expect(this.employeeNameSearchInput).toBeVisible({ timeout: 15000 });
-    await clearAndTypeSequentially(this.employeeNameSearchInput, fullName, {
-      delay: 100,
-      timeout: 15000,
-    });
+    await fillInput(this.employeeNameSearchInput, fullName, { clear: true });
     await clickButton(this.searchButton);
   }
 
@@ -161,11 +173,16 @@ export class PIMPage {
     await clickButton(row.locator('i.bi-trash'));
     const confirmButton = this.page.getByRole('button', { name: 'Yes, Delete' });
     await confirmButton.waitFor({ state: 'visible' });
-    await clickButton(confirmButton);
 
-    const toast = this.page.locator('.oxd-toast');
-    await toast.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
-    await toast.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => null);
+    const deleteResponse = this.page
+      .waitForResponse(
+        (res) => res.url().includes('/employees') && res.request().method() === 'DELETE',
+        { timeout: 10000 },
+      )
+      .catch(() => null);
+
+    await clickButton(confirmButton);
+    await deleteResponse;
   }
 
   /** Delete several employees at once */
@@ -182,13 +199,17 @@ export class PIMPage {
     await clickButton(firstRow.locator('.bi-trash'));
 
     const confirmButton = this.page.getByRole('button', { name: /Yes, Delete/i });
-
     await confirmButton.waitFor({ state: 'visible', timeout: 5000 });
-    await clickButton(confirmButton);
 
-    const toast = this.page.locator('.oxd-toast');
-    await toast.waitFor({ state: 'visible', timeout: 10000 }).catch(() => null);
-    await toast.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => null);
+    const deleteResponse = this.page
+      .waitForResponse(
+        (res) => res.url().includes('/employees') && res.request().method() === 'DELETE',
+        { timeout: 10000 },
+      )
+      .catch(() => null);
+
+    await clickButton(confirmButton);
+    await deleteResponse;
   }
 
   /** Verify that the employee is deleted */

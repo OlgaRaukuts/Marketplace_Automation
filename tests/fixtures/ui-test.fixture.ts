@@ -27,12 +27,13 @@ async function createEmployeeViaApi(
   let lastErrorBody: string | undefined;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const employeeId = data.employeeId ?? `${Math.floor(100000 + Math.random() * 900000)}`;
     const response = await request.post('/web/index.php/api/v2/pim/employees', {
       data: {
         firstName: data.firstName,
         middleName: data.middleName ?? '',
         lastName: data.lastName,
-        employeeId: data.employeeId ?? '',
+        employeeId: employeeId,
       },
     });
 
@@ -70,7 +71,10 @@ export const test = base.extend<MyFixtures>({
       successUrl: '**/pim/viewEmployeeList',
     });
 
-    await page.waitForSelector('.oxd-table', { state: 'visible', timeout: 20000 });
+    await page
+      .locator('.oxd-table, .orangehrm-paper-container, .oxd-table-body')
+      .first()
+      .waitFor({ state: 'visible', timeout: 30000 });
     await use(pimPage);
   },
 

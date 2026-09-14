@@ -54,6 +54,7 @@ export default defineConfig({
     baseURL: 'https://opensource-demo.orangehrmlive.com',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    ignoreHTTPSErrors: true,
     // 1. Force the browser language to English
     locale: 'en-US',
 
