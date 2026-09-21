@@ -58,19 +58,15 @@ test.describe('PIM Page Tests', () => {
     await pimPage.verifyEmployeeInTable(tempEmployee.firstName, tempEmployee.lastName);
   });
 
-  test('should delete an employee', async ({ pimPage, newEmployeeData }) => {
-    await pimPage.addEmployee(newEmployeeData.firstName, newEmployeeData.lastName);
-    await pimPage.verifyProfilePage(newEmployeeData.fullName);
-
+  test('should delete an employee', async ({ pimPage, tempEmployee }) => {
     await pimPage.navigateToPIM();
-
-    await pimPage.searchEmployeeByName(newEmployeeData.fullName);
-    await pimPage.deleteEmployee(newEmployeeData.firstName, newEmployeeData.lastName);
-    await pimPage.isEmployeeDeleted(newEmployeeData.firstName, newEmployeeData.lastName);
+    await pimPage.searchEmployeeByName(tempEmployee.fullName);
+    await pimPage.deleteEmployee(tempEmployee.firstName, tempEmployee.lastName);
+    await pimPage.isEmployeeDeleted(tempEmployee.firstName, tempEmployee.lastName);
   });
 
   test('should add several new employees', async ({ pimPage, page, bulkNewEmployeeData }) => {
-    test.setTimeout(180_000);
+    test.setTimeout(90_000);
     for (const emp of bulkNewEmployeeData) {
       await pimPage.addEmployee(emp.firstName, emp.lastName);
       await pimPage.verifyProfilePage(emp.fullName);
@@ -78,12 +74,8 @@ test.describe('PIM Page Tests', () => {
       await pimPage.navigateToPIM();
       await pimPage.searchEmployeeByName(emp.fullName);
       await pimPage.verifyEmployeeInTable(emp.firstName, emp.lastName);
-      await page.getByRole('button', { name: 'Reset' }).click();
-    }
-
-    for (const emp of bulkNewEmployeeData) {
-      await pimPage.searchEmployeeByName(emp.fullName);
       await pimPage.deleteEmployee(emp.firstName, emp.lastName);
+      await page.getByRole('button', { name: 'Reset' }).click();
     }
   });
 

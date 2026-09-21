@@ -42,8 +42,8 @@ export default defineConfig({
   forbidOnly: isCI,
   /* Retry on CI only */
   retries: isCI ? 2 : 0,
-  /* Fewer workers reduce load on the shared OrangeHRM demo DB */
-  workers: isCI ? 2 : 2,
+  /* 3 workers allow all 3 browser projects (chromium, firefox, webkit) to run concurrently */
+  workers: isCI ? 2 : 3,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: isCI
     ? [['html'], ['github'], ['allure-playwright']]
