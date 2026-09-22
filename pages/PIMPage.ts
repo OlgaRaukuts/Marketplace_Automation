@@ -69,7 +69,21 @@ export class PIMPage {
 
     await this.saveButton.scrollIntoViewIfNeeded();
 
+    // Listen for the POST request to confirm form submission
+    const postPromise = this.page
+      .waitForResponse(
+        (res) => res.url().includes('/api/v2/pim/employees') && res.request().method() === 'POST',
+        { timeout: 8000 },
+      )
+      .catch(() => null);
+
     await clickButton(this.saveButton);
+    const postResponse = await postPromise;
+    if (!postResponse) {
+      // If the initial click was swallowed before form hydration, retry click
+      await this.saveButton.click({ force: true }).catch(() => null);
+    }
+
     await this.waitForEmployeeProfilePage(firstName);
   }
 
