@@ -1,5 +1,5 @@
-import { Page, Locator, expect } from '@playwright/test'; // Added 'expect' here
-import { clickButton, fillInput, waitForDomContentLoaded } from '../helpers/ui-actions';
+import { Page, Locator, expect } from '@playwright/test';
+import { clickButton, fillInput, waitForDomContentLoaded, waitVisible } from '../helpers/ui-actions';
 
 export class LoginPage {
   readonly page: Page;
@@ -39,8 +39,9 @@ export class LoginPage {
 
   /** Login to the page */
   async login(username: string, password: string): Promise<void> {
-    if (username) await fillInput(this.usernameInput, username);
-    if (password) await fillInput(this.passwordInput, password);
+    await waitVisible(this.usernameInput, 15_000);
+    if (username) await fillInput(this.usernameInput, username, { clear: true });
+    if (password) await fillInput(this.passwordInput, password, { clear: true });
     await clickButton(this.loginButton);
   }
 
@@ -56,8 +57,11 @@ export class LoginPage {
 
   /** Logout from the account */
   async logout(): Promise<void> {
+    await waitVisible(this.userProfileDropdown, 15_000);
     await clickButton(this.userProfileDropdown);
+    await waitVisible(this.logoutLink, 10_000);
     await clickButton(this.logoutLink);
+    await waitForDomContentLoaded(this.page);
   }
 
   /** Check if the user is logged out with auto-waiting assertions */

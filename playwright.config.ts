@@ -46,8 +46,8 @@ export default defineConfig({
   workers: isCI ? 2 : 3,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: isCI
-    ? [['html'], ['github'], ['allure-playwright']]
-    : [['html'], ['allure-playwright']],
+    ? [['html', { open: 'never' }], ['github'], ['allure-playwright']]
+    : [['html', { open: 'never' }], ['allure-playwright']],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
