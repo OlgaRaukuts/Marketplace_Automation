@@ -71,10 +71,6 @@ export const test = base.extend<MyFixtures>({
       successUrl: '**/pim/viewEmployeeList',
     });
 
-    await page
-      .locator('.oxd-table, .orangehrm-paper-container, .oxd-table-body')
-      .first()
-      .waitFor({ state: 'visible', timeout: 30000 });
     await use(pimPage);
   },
 
