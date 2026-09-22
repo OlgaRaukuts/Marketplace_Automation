@@ -40,8 +40,8 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: isCI,
-  /* Retry on CI only */
-  retries: isCI ? 2 : 0,
+  /* Retry once on CI to catch network hiccups without prolonged retry delays */
+  retries: isCI ? 1 : 0,
   /* 3 workers allow all 3 browser projects (chromium, firefox, webkit) to run concurrently */
   workers: isCI ? 2 : 3,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */

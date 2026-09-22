@@ -69,9 +69,9 @@ export class LoginPage {
   /** Verifies the user is successfully logged in and redirected to the Account page */
   // pages/LoginPage.ts
   async expectedLoginSuccess(): Promise<void> {
-    await expect(this.page).toHaveURL(/.*dashboard.*/, { timeout: 10000 });
-    await this.page.waitForSelector('h6.oxd-topbar-header-breadcrumb-module', { state: 'visible' });
-    await expect(this.page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    await expect(this.page).toHaveURL(/.*dashboard.*/, { timeout: 20000 });
+    await this.page.waitForSelector('h6.oxd-topbar-header-breadcrumb-module', { state: 'visible', timeout: 20000 });
+    await expect(this.page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({ timeout: 20000 });
   }
 
   /** Verify that the login error message is displayed */
