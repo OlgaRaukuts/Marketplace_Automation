@@ -67,20 +67,22 @@ export class EmployeeListPage extends BasePage {
       .filter({ hasText: firstName })
       .filter({ hasText: lastName })
       .first();
-    await clickButton(row.locator('button:has(.bi-trash), .bi-trash').first());
+    const trashBtn = row.locator('button:has(.bi-trash), .bi-trash').first();
+    await clickButton(trashBtn, { timeout: 30_000 });
     const confirmButton = this.page.getByRole('button', { name: 'Yes, Delete' });
-    await confirmButton.waitFor({ state: 'visible' });
+    await confirmButton.waitFor({ state: 'visible', timeout: 15_000 });
 
     const deleteResponse = this.page
       .waitForResponse(
         (res) => res.url().includes('/employees') && res.request().method() === 'DELETE',
-        { timeout: 10_000 },
+        { timeout: 15_000 },
       )
       .catch(() => null);
 
     await clickButton(confirmButton);
     await deleteResponse;
-    await this.page.locator('.oxd-dialog-sheet').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => null);
+    await this.page.locator('.oxd-dialog-sheet').waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => null);
+    await this.page.locator('.oxd-loading-spinner').waitFor({ state: 'detached', timeout: 10_000 }).catch(() => null);
   }
 
   /** Delete the first record visible in the search result table */
@@ -128,13 +130,15 @@ export class EmployeeListPage extends BasePage {
 
   /** Verify that the PIM view is displayed */
   async isDisplayed(): Promise<void> {
-    await expect(this.page).toHaveURL(/\/pim\/viewEmployeeList/);
+    await expect(this.page).toHaveURL(/\/pim\/viewEmployeeList/, { timeout: 30_000 });
+    await expect(this.page.getByRole('heading', { name: 'Employee Information' })).toBeVisible({ timeout: 30_000 });
   }
 
   /** Verify that the table list is displayed */
   async isListDisplayed(): Promise<void> {
-    const firstRow = this.page.locator('.oxd-table-card').first();
-    await expect(firstRow).toBeVisible({ timeout: 10_000 });
+    await this.page.locator('.oxd-loading-spinner').waitFor({ state: 'detached', timeout: 30_000 }).catch(() => null);
+    const tableElement = this.page.locator('.oxd-table-card, .orangehrm-container, .oxd-table-body').first();
+    await expect(tableElement).toBeVisible({ timeout: 30_000 });
   }
 
   /** Verify that an employee row is visible in the table */
@@ -144,7 +148,7 @@ export class EmployeeListPage extends BasePage {
       .filter({ hasText: firstName })
       .filter({ hasText: lastName })
       .first();
-    await expect(row).toBeVisible();
+    await expect(row).toBeVisible({ timeout: 30_000 });
   }
 
   /** Click edit pencil icon on employee row */

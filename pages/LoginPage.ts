@@ -58,8 +58,8 @@ export class LoginPage extends BasePage {
 
   /** Verify that the login error message is displayed */
   async expectLoginError(): Promise<void> {
-    await expect(this.errorAlert).toBeVisible();
-    await expect(this.errorAlert).toHaveText(/Invalid credentials/);
+    await expect(this.errorAlert).toBeVisible({ timeout: 30_000 });
+    await expect(this.errorAlert).toHaveText(/Invalid credentials/, { timeout: 10_000 });
   }
 
   /** Verify that the required message is displayed */

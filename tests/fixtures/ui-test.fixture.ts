@@ -28,21 +28,26 @@ async function createEmployeeViaApi(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const employeeId = data.employeeId ?? `${Math.floor(100000 + Math.random() * 900000)}`;
-    const response = await request.post('/web/index.php/api/v2/pim/employees', {
-      data: {
-        firstName: data.firstName,
-        middleName: data.middleName ?? '',
-        lastName: data.lastName,
-        employeeId: employeeId,
-      },
-    });
+    try {
+      const response = await request.post('/web/index.php/api/v2/pim/employees', {
+        data: {
+          firstName: data.firstName,
+          middleName: data.middleName ?? '',
+          lastName: data.lastName,
+          employeeId: employeeId,
+        },
+        timeout: 15_000,
+      });
 
-    if (response.ok()) {
-      const body: any = await response.json();
-      return { body };
+      if (response.ok()) {
+        const body: any = await response.json();
+        return { body };
+      }
+
+      lastErrorBody = await response.text();
+    } catch (err: any) {
+      lastErrorBody = err?.message ?? String(err);
     }
-
-    lastErrorBody = await response.text();
 
     if (attempt < maxAttempts) {
       await new Promise((res) => setTimeout(res, 500));
@@ -105,9 +110,12 @@ export const test = base.extend<MyFixtures>({
 
     // --- TEARDOWN (via API) ---
     if (empNumber) {
-      await page.request.delete('/web/index.php/api/v2/pim/employees', {
-        data: { ids: [empNumber] },
-      });
+      await page.request
+        .delete('/web/index.php/api/v2/pim/employees', {
+          data: { ids: [empNumber] },
+          timeout: 15_000,
+        })
+        .catch(() => null);
     }
   },
 
@@ -132,11 +140,14 @@ export const test = base.extend<MyFixtures>({
     await use(createdEmployees);
 
     // --- TEARDOWN (via API) ---
-    const idsToDelete = createdEmployees.map((emp) => emp.empNumber);
+    const idsToDelete = createdEmployees.map((emp) => emp.empNumber).filter(Boolean);
     if (idsToDelete.length > 0) {
-      await page.request.delete('/web/index.php/api/v2/pim/employees', {
-        data: { ids: idsToDelete },
-      });
+      await page.request
+        .delete('/web/index.php/api/v2/pim/employees', {
+          data: { ids: idsToDelete },
+          timeout: 15_000,
+        })
+        .catch(() => null);
     }
   },
 });
