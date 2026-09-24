@@ -1,43 +1,31 @@
-import { Page, Locator, expect } from '@playwright/test';
-import { clickButton, fillInput, waitForDomContentLoaded, waitVisible } from '../helpers/ui-actions';
+import { BasePage } from './BasePage';
+import { type Page, type Locator, expect } from '@playwright/test';
+import { clickButton, fillInput, waitVisible } from '../helpers/ui-actions';
 
-export class LoginPage {
-  readonly page: Page;
+export class LoginPage extends BasePage {
   readonly usernameInput: Locator;
   readonly passwordInput: Locator;
   readonly loginButton: Locator;
   readonly errorAlert: Locator;
   readonly requiredMessage: Locator;
-  readonly logoutLink: Locator;
-  readonly dashboard: Locator;
   readonly loginHeading: Locator;
-  readonly userProfileDropdown: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     this.usernameInput = page.locator('input[name="username"]');
     this.passwordInput = page.locator('input[name="password"]');
     this.loginButton = page.getByRole('button', { name: 'Login' });
     this.errorAlert = page.getByRole('alert');
     this.requiredMessage = page.locator('text=Required');
-    this.logoutLink = page.getByRole('menuitem', { name: 'Logout' });
-    this.dashboard = page.getByRole('heading', { name: 'Dashboard' });
     this.loginHeading = page.getByRole('heading', { level: 5, name: 'Login' });
-    this.userProfileDropdown = page.locator('.oxd-userdropdown-tab');
   }
 
-  /** Wait for the page to load completely */
-  async waitForPageLoad(): Promise<void> {
-    await waitForDomContentLoaded(this.page);
-  }
-
-  /** Navigate to the Login page and wait for it to load */
+  /** Navigate to the Login page using relative path */
   async goto(): Promise<void> {
-    await this.page.goto('https://opensource-demo.orangehrmlive.com/web/index.php/auth/login');
-    await this.waitForPageLoad();
+    await super.goto('/web/index.php/auth/login');
   }
 
-  /** Login to the page */
+  /** Login to the application */
   async login(username: string, password: string): Promise<void> {
     await waitVisible(this.usernameInput, 15_000);
     if (username) await fillInput(this.usernameInput, username, { clear: true });
@@ -45,7 +33,7 @@ export class LoginPage {
     await clickButton(this.loginButton);
   }
 
-  /** Getting error alert text - uses ?? to ensure a string is always returned */
+  /** Getting error alert text */
   async errorAlertText(): Promise<string> {
     return (await this.errorAlert.textContent()) ?? '';
   }
@@ -55,23 +43,13 @@ export class LoginPage {
     return (await this.requiredMessage.textContent()) ?? '';
   }
 
-  /** Logout from the account */
-  async logout(): Promise<void> {
-    await waitVisible(this.userProfileDropdown, 15_000);
-    await clickButton(this.userProfileDropdown);
-    await waitVisible(this.logoutLink, 10_000);
-    await clickButton(this.logoutLink);
-    await waitForDomContentLoaded(this.page);
-  }
-
-  /** Check if the user is logged out with auto-waiting assertions */
+  /** Check if the user is logged out */
   async expectLoggedOut(): Promise<void> {
     await expect(this.page).toHaveURL(/.*\/auth\/login/);
     await expect(this.loginHeading).toBeVisible();
   }
 
-  /** Verifies the user is successfully logged in and redirected to the Account page */
-  // pages/LoginPage.ts
+  /** Verifies the user is successfully logged in and redirected to the Dashboard */
   async expectedLoginSuccess(): Promise<void> {
     await expect(this.page).toHaveURL(/.*dashboard.*/, { timeout: 20000 });
     await this.page.waitForSelector('h6.oxd-topbar-header-breadcrumb-module', { state: 'visible', timeout: 20000 });
@@ -86,10 +64,8 @@ export class LoginPage {
 
   /** Verify that the required message is displayed */
   async expectRequiredMessage(): Promise<void> {
-    // Assert that exactly 2 error messages appear on the screen
     await expect(this.requiredMessage).toHaveCount(2);
-
-    // Assert that the first one contains the text "Required"
     await expect(this.requiredMessage.first()).toHaveText(/Required/i);
   }
 }
+
