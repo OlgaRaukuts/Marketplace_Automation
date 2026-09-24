@@ -55,7 +55,7 @@ export class AddEmployeePage extends BasePage {
       )
       .catch(() => null);
 
-    await clickButton(this.saveButton);
+    await clickButton(this.saveButton, { force: true });
     const postResponse = await postPromise;
     if (!postResponse) {
       await this.saveButton.click({ force: true }).catch(() => null);

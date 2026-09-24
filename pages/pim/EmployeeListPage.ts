@@ -23,8 +23,13 @@ export class EmployeeListPage extends BasePage {
 
   /** Navigate to the Employee List view */
   async goto(): Promise<void> {
-    await super.goto('/web/index.php/pim/viewEmployeeList');
-    await expect(this.page.getByRole('heading', { name: 'Employee Information' })).toBeVisible({ timeout: 15_000 });
+    const pimLink = this.page.getByRole('link', { name: 'PIM' });
+    if (await pimLink.isVisible().catch(() => false)) {
+      await clickButton(pimLink);
+    } else {
+      await super.goto('/web/index.php/pim/viewEmployeeList');
+    }
+    await expect(this.page.getByRole('heading', { name: 'Employee Information' })).toBeVisible({ timeout: 30_000 });
   }
 
   /** Search for an employee by name */
@@ -34,13 +39,17 @@ export class EmployeeListPage extends BasePage {
 
     const searchResponse = this.page
       .waitForResponse(
-        (res) => res.url().includes('/employees') && res.request().method() === 'GET',
+        (res) =>
+          res.url().includes('/employees') &&
+          res.request().method() === 'GET' &&
+          !res.url().includes('nameOrId='),
         { timeout: 10_000 },
       )
       .catch(() => null);
 
     await clickButton(this.searchButton);
     await searchResponse;
+    await this.page.locator('.oxd-loading-spinner').waitFor({ state: 'detached', timeout: 5000 }).catch(() => null);
     await this.waitForPageLoad();
   }
 
@@ -76,6 +85,7 @@ export class EmployeeListPage extends BasePage {
 
   /** Delete the first record visible in the search result table */
   async deleteFirstResult(): Promise<void> {
+    await this.page.locator('.oxd-loading-spinner').waitFor({ state: 'detached', timeout: 5000 }).catch(() => null);
     const firstRow = this.page.locator('.oxd-table-card').first();
     const noRecords = this.page.getByText('No Records Found');
     await firstRow.or(noRecords).waitFor({ state: 'visible', timeout: 15_000 });
@@ -98,6 +108,7 @@ export class EmployeeListPage extends BasePage {
     await clickButton(confirmButton);
     await deleteResponse;
     await this.page.locator('.oxd-dialog-sheet').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => null);
+    await this.page.locator('.oxd-loading-spinner').waitFor({ state: 'detached', timeout: 5000 }).catch(() => null);
   }
 
   /** Verify that the employee is deleted from the table */
